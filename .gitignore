@@ -1,0 +1,14 @@
+perf.*
+*.unl
+*.csv
+perf/**
+build/**
+*.o
+*.so
+*.bld
+dev/**
+**explain**
+.vscode
+*~
+*.bak
+*.old
