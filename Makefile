@@ -9,6 +9,8 @@ CC = gcc
 CFLAGS = -Wall -O3 -std=gnu23 -fPIC -shared -I${SDKDIR}/incl -DMI_SERVBUILD -D_GNU_SOURCE 
 LDFLAGS = -shared -u _etext
 
+LD ?= $(CC)
+
 MKDIR = mkdir -p
 RM = rm -f
 RMDIR = rmdir
