@@ -44,9 +44,3 @@ udr_fn(mi_lvarchar *trc, MI_FPARAM *fParam) {
 }
 
 
-__always_inline uint64_t
-get_clocktick_ns(void) {
-    struct timespec ts;
-    clock_gettime(CLOCK_REALTIME, &ts);
-    return (uint64_t) (ts.tv_sec*NSEC) + (ts.tv_nsec);
-}

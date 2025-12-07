@@ -12,3 +12,4 @@ dev/**
 *~
 *.bak
 *.old
+incl/**

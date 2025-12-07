@@ -1,4 +1,6 @@
 // vim: set ts=4 sw=4 et:
+#include <dmi/mi.h>
+
 #include <inttypes.h>
 #include <time.h>
 #include <sys/time.h>

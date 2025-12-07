@@ -1,4 +1,6 @@
 // vim: set ts=4 sw=4 et:
+#include <dmi/mi.h>
+
 #include "../tracing/tracing.h"
 #include "../runtime/runtime.h"
 #include <time.h>
@@ -28,6 +30,7 @@ mi_datetime *utc_realtime_dt( MI_FPARAM *fParam );
 void timespec_to_ns_tm( const timespec_t *ts, ns_tm_t *tm,const IS_GMT_T is_gmt);
 void ns_tm_to_datetime(const ns_tm_t *tm, mi_datetime *dt);
 
+uint64_t get_clocktick_ns(void);
 
 
 

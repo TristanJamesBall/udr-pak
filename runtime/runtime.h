@@ -1,5 +1,5 @@
 // vim: noai:ts=4:sw=4
-
+#include <dmi/mi.h>
 #include "../tracing/tracing.h"
 
 #define isNull(x) (NULL == x)
@@ -77,7 +77,6 @@
 
 
 void * get_func_state_ptr(size_t sz, MI_FPARAM *fParam);
-uint64_t get_clocktick_ns(void);
 
 
 mi_integer udr_fn(mi_lvarchar *trc, MI_FPARAM *fParam);

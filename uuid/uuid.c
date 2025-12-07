@@ -1,5 +1,7 @@
 // vim: set ts=4 sw=4 et:
+#include <dmi/mi.h>
 #include "../runtime/runtime.h"
+#include "../realtime/realtime.h"
 #include "../prng/prng.h"
 
 #define BitMask48 0xffffffffffff
