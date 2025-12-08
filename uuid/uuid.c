@@ -3,6 +3,7 @@
 #include "../runtime/runtime.h"
 #include "../realtime/realtime.h"
 #include "../prng/prng.h"
+#include <time.h>
 
 #define BitMask48 0xffffffffffff
 #define BitMask32 0xffffffff
@@ -24,7 +25,7 @@ uuidv7( MI_FPARAM *fParam) {
     uint64_t ts;
     mi_lvarchar *ret;
 
-    ts = get_clocktick_ns() / 1000000;
+    ts = get_clocktick_ns(CLOCK_REALTIME) / 1000000;
 
 
     uuid.qw[0] = (ts << 16) + ( 0x7000 + ((uint64_t)*prng(fParam) & 0xfff) );

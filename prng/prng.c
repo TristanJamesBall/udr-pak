@@ -2,6 +2,7 @@
 #include "../tracing/tracing.h"
 #include "../runtime/runtime.h"
 #include "../realtime/realtime.h"
+#include <time.h>
 #include "prng.h"
 
 
@@ -40,16 +41,20 @@ static inline uint64_t rotl(const uint64_t x, int k) {
 }
 
 xsr256_state_t*
-init_xsr256_state(MI_FPARAM *fParam) {
+init_xsr256_state(
+    MI_FPARAM *fParam
+) {
 
     xsr256_state_t *s;
     uint64_t sm64_z;
     uint64_t nanosec;
     uint32_t i;
     uint64_t sid;
+
     
     s = (xsr256_state_t *)get_func_state_ptr(sizeof(xsr256_state_t),fParam);
 
+#ifdef  MI_SERVBUILD
     if isNull(s->conn) {
         // Only do this once, as mi_connect allocates memory in PER_STMT_EXEC 
         // (aka, it's new memory every time, but it hangs around until the end 
@@ -57,7 +62,11 @@ init_xsr256_state(MI_FPARAM *fParam) {
         s->conn = mi_open(NULL, NULL, NULL);
     }
     sid = (uint64_t)mi_get_id(s->conn, MI_SESSION_ID);
-    nanosec = get_clocktick_ns(); 
+#else
+    //dummy for testing outside server
+    sid = 1;
+#endif    
+    nanosec = get_clocktick_ns(CLOCK_REALTIME); 
         
     
     //s->sm64_x = ( ( nanosec & 0xffffULL) << 32 ) + (sid & 0xffffULL );
@@ -128,11 +137,11 @@ prng2(MI_FPARAM *fParam) {
     uint8_t i,j;
     xsr256_state_t s;
     struct timespec ts;
-    
+    clockid_t clocks[] = {CLOCK_REALTIME,CLOCK_MONOTONIC,CLOCK_THREAD_CPUTIME_ID,CLOCK_REALTIME};
 
         
     for(i=0;i <= 3; i++ ) {
-        clock_gettime(CLOCK_TAI, &ts);
+        clock_gettime(clocks[i], &ts);
 
         s.sm64_x = ( ts.tv_nsec & 0xffffffff );
         for(j=0;j <= (uint8_t)(ts.tv_nsec & 0x7); j++ ) {
@@ -161,6 +170,31 @@ prng2(MI_FPARAM *fParam) {
     *ret = (rotl(s.xsr_s[1] * 5, 7) * 9) >>1;
     return((mi_bigint*)ret);
 }
+
+
+mi_bigint *
+prng3(MI_FPARAM *fParam) {
+    int64_t *ret;
+    uint64_t *sm64_x;
+    uint64_t sm64_z = 0;
+
+    sm64_x = (uint64_t*)get_func_state_ptr(sizeof(uint64_t),fParam);
+        
+    if( *sm64_x == 0 ) {
+        *sm64_x = get_clocktick_ns(CLOCK_REALTIME);
+        *sm64_x ^= ( (get_clocktick_ns(CLOCK_PROCESS_CPUTIME_ID) & 0xffffff ) << 40 );
+    }
+    sm64_z = (*sm64_x += 0x9e3779b97f4a7c15);
+    sm64_z = (sm64_z ^ (sm64_z >> 30)) * 0xbf58476d1ce4e5b9;
+    sm64_z = (sm64_z ^ (sm64_z >> 27)) * 0x94d049bb133111eb;
+
+    ret = udr_alloc_ret(mi_bigint);
+
+    *ret =  sm64_z ^ (sm64_z >> 31);
+    
+    return((mi_bigint*)ret);
+}
+
 
 /*  Written in 2015 by Sebastiano Vigna (vigna@acm.org)
 

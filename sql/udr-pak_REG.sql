@@ -46,7 +46,7 @@ EXTERNAL NAME '$INFORMIXDIR/extend/udr-pak/udr-pak.so(udr_fn)'
 LANGUAGE C;
 
 
-create function if not exists seq(int,int,int) returns int
+create function if not exists seq(p1 int default null,p2 int default null , p3 int default null) returns int as seq
     with(ITERATOR,VARIANT,HANDLESNULLS, PARALLELIZABLE)
 	external name '$INFORMIXDIR/extend/udr-pak/udr-pak.so(seq_int)'
 	language c;
@@ -63,6 +63,11 @@ create function if not exists prng2() returns bigint
 	language c
 	;
 
+create function if not exists prng3() returns bigint
+	with(VARIANT,HANDLESNULLS, PARALLELIZABLE)
+	external name '$INFORMIXDIR/extend/udr-pak/udr-pak.so(prng3)'
+	language c
+	;
 
 create function if not exists uuidv7() returns lvarchar(36)
 	with(VARIANT,HANDLESNULLS, PARALLELIZABLE)

@@ -18,7 +18,7 @@ get_func_state_ptr(size_t sz, MI_FPARAM *fParam) {
 
                     return_enomem(NULL);
                 }
-
+                memset(ustate,0,sz);
                 mi_fp_setfuncstate( fParam, ustate );
         }
 

@@ -30,7 +30,11 @@ mi_datetime *utc_realtime_dt( MI_FPARAM *fParam );
 void timespec_to_ns_tm( const timespec_t *ts, ns_tm_t *tm,const IS_GMT_T is_gmt);
 void ns_tm_to_datetime(const ns_tm_t *tm, mi_datetime *dt);
 
-uint64_t get_clocktick_ns(void);
+uint64_t get_clocktick_ns(clockid_t clock);
+
+uint64_t get_monotonic_ns(void);
+uint64_t get_proc_cputime_ns(void);
+uint64_t get_thread_cputime_ns(void);
 
 
 

@@ -154,9 +154,9 @@ get_monotonic_ns(void) {
 }
 
 __always_inline uint64_t
-get_clocktick_ns(void) {
+get_clocktick_ns(clockid_t clock) {
     struct timespec ts;
-    clock_gettime(CLOCK_REALTIME, &ts);
+    clock_gettime(clock, &ts);
     return (uint64_t) (ts.tv_sec*NSEC) + (ts.tv_nsec);
 }
 /*

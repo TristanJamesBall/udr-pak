@@ -13,3 +13,5 @@ dev/**
 *.bak
 *.old
 incl/**
+informix-*/**
+informix-*

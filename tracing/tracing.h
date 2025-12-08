@@ -7,6 +7,7 @@
 #include <dmi/mi.h>
 #include <dmi/sqlhdr.h>
 #include <dmi/sqlca.h>
+#include <dmi/mitrace.h>
 
 
 
@@ -40,3 +41,4 @@ void udr_trace_off( void );
 mi_bigint udr_trace_test( MI_FPARAM *fParam);
     
 
+void _mi_tracelevel_set( const mi_string *trace_cmds);

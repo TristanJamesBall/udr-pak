@@ -12,13 +12,18 @@ typeset -i OUTC=$DBACCESS_COLUMNS
 typeset -A meta
 main() {
 
-	meta=( [h1]="" [h2]="Txn Level Auto Re-Seed" [short_name]="prng()" )
-	projection_clauses=( "prng() as prng")
-	bench_runner 5000000 5
+	meta=( [h1]="" [h2]="SplitMix only (stateless) Auto Re-Seed every 100 rows" [short_name]="prng2()" )
+	projection_clauses=( "prng3() as prng2")
+	bench_runner 15000000 5
 
 	meta=( [h1]="" [h2]="Row Level (stateless) Auto Re-Seed" [short_name]="prng2()" )
 	projection_clauses=( "prng2() as prng2")
-	bench_runner 5000000 5
+	bench_runner 15000000 5
+
+	meta=( [h1]="" [h2]="Txn Level Auto Re-Seed" [short_name]="prng()" )
+	projection_clauses=( "prng() as prng")
+	bench_runner 15000000 5
+
 	
 }
 
@@ -71,7 +76,7 @@ bench_runner() {
 		if (( xjoins > 10 )); then
 			xjoins=10
 		fi
-		seq_lines=$( perl -e "use POSIX; print POSIX::round( ( ${tgt_line_count}.0 ** (  1.0/(${xjoins})) ) );" )
+		seq_lines=$( perl -e "use POSIX; print POSIX::ceil( ( ${tgt_line_count}.0 ** (  1.0/(${xjoins})) ) );" )
 	else
 		seq_lines=${tgt_line_count}
 	fi
@@ -116,6 +121,9 @@ bench_runner() {
 			from	
 							table(seq(1,1,${seq_lines}))
 				$( 
+					# carefull here, this is x=1 and '<' not '<='
+					# delberately so we don't get waaaaay to many xjones
+					# 1 to many is waaaaay
 					for (( x=1; x < xjoins; x++ )); do 
 						printf "cross join table(seq(1,1,%d))\n" "$seq_lines"; 
 					done 

@@ -1,13 +1,24 @@
 // vim: set ts=4 sw=4 et:
 
 #include "tracing.h"
+#include <dmi/mitrace.h>
 #include "../runtime/runtime.h"
 
 /* based on systraceclassses column width*/
 #define TRACE_STR_LEN 20
 
 #define BIT_MASK_LO_6 63
- 
+
+
+void
+_mi_tracelevel_set( const mi_string *trace_cmds) {
+    #ifdef MI_SERVERBUILD
+    mi_tracelevel_set(trace_cmds);
+    #else
+    fprintf(stderr,"Can't strace in client code, would have set: %s\n",trace_cmds);
+    #endif
+}
+
 mi_lvarchar *
 udr_trace_configure( 
     mi_integer      trace_level, 
@@ -19,16 +30,22 @@ udr_trace_configure(
     mi_lvarchar *ret;
 
 
-
+#ifdef MI_SERVERBUILD
     mi_tracefile_set( 
             nvl2Arg(fParam,2,mi_lvarchar_to_string(trace_path),"/var/tmp/udrpak.trace.log")
-        );
+    );
+#else
+    fprintf( stderr,
+        "Can't strace in client code, would have set: %s\n",
+        nvl2Arg(fParam,2,mi_lvarchar_to_string(trace_path),"/var/tmp/udrpak.trace.log")
+    );
+#endif
     
     snprintf( trace_cmd, TRACE_STR_LEN, "%.11s %3d", 
         nvl2Arg(fParam,1,mi_lvarchar_to_string(trace_class),"udrpak"),
         (int8_t)nvl2Arg(fParam,0,trace_level,1)
     );
-    mi_tracelevel_set(trace_cmd);
+    _mi_tracelevel_set(trace_cmd);
 
     ret = mi_new_var(strlen(trace_cmd));
     return(ret);
@@ -58,21 +75,22 @@ udr_trace_set(
 
 }
 
+
 void 
 udr_trace_on( void ) {
 
-    mi_tracelevel_set("udrpak_mem 1");
-    mi_tracelevel_set("udrpak 1");
-    mi_tracelevel_set("__myErrors__ 1");
+    _mi_tracelevel_set("udrpak_mem 1");
+    _mi_tracelevel_set("udrpak 1");
+    _mi_tracelevel_set("__myErrors__ 1");
 }
 
 
 void 
 udr_trace_off( void ) {
 
-    mi_tracelevel_set("udrpak_mem 0");
-    mi_tracelevel_set("udrpak 0");
-    mi_tracelevel_set("__myErrors__ 0");
+    _mi_tracelevel_set("udrpak_mem 0");
+    _mi_tracelevel_set("udrpak 0");
+    _mi_tracelevel_set("__myErrors__ 0");
 }
 
 

@@ -1,4 +1,3 @@
-unload to /dev/stdout delimiter ','
 select
 	prng()				as prng,
 	prng2()				as prng2,
