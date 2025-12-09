@@ -10,9 +10,11 @@ DROP PROCEDURE if exists udr_trace_off;
 DROP PROCEDURE if exists udr_trace_test;
 
 
-DROP FUNCTION IF EXISTS proctime_dt;
-DROP FUNCTION IF EXISTS threadtime_dt;
-DROP FUNCTION IF EXISTS monotime_dt;
+DROP FUNCTION IF EXISTS clocktick;
+DROP FUNCTION IF EXISTS clocktick_s;
+DROP FUNCTION IF EXISTS clocktick_ms;
+DROP FUNCTION IF EXISTS clocktick_us;
+DROP FUNCTION IF EXISTS clocktick_ns;
 
 DROP FUNCTION IF EXISTS realtime;
 DROP FUNCTION IF EXISTS realtime_dt;
@@ -38,8 +40,6 @@ DROP PROCEDURE IF EXISTS udr_fn;
 drop function if exists seq;
 
 drop function if exists prng;
-drop function if exists prng2;
-drop function if exists prng3;
 
 
 drop function if exists uuid;

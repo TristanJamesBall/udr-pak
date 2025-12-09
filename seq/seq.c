@@ -40,6 +40,16 @@ mi_integer seq_int_init(mi_integer p1,mi_integer p2 ,mi_integer p3 ,MI_FPARAM *f
 
     seq_state = (int_seq_t *)get_func_state_ptr(sizeof(int_seq_t),fParam);
 
+    /* our 3 parameters aren't really positional, although the way informix works
+       parameters are either named or positional.
+
+       We don't want that, we want to do "the right thing" depend in whether 
+       we were given 1, 2, or 3 parameters - recognising that (null,value,value)
+       is something that informix will allow but is different to (value,value)
+       
+       So, this is how we map the different combinations of our 3 parameters being
+       set, or null, into the "1, 2, or 3" variants we care about
+    */
     switch (p_map) {
 
         case PMAP_001:
@@ -96,23 +106,6 @@ mi_integer seq_int_init(mi_integer p1,mi_integer p2 ,mi_integer p3 ,MI_FPARAM *f
         seq_state->step *= -1;
     }  
     
-    /*
-        if( seq_state->step <= 0 ) {
-            return(-1);
-        }
-
-    } else {
-
-        if( seq_state->step >= 0 ) {
-            return(-1);
-        }
-        
-        seq_state->step     = p2*-1;
-        seq_state->end      = p1;
-        seq_state->now      = p3;
-
-    }
-  */
     return(0); 
 }
 
@@ -133,6 +126,10 @@ mi_integer seq_int( mi_integer p1,mi_integer p2 ,mi_integer p3 ,MI_FPARAM *fPara
 
         case SET_RETONE:
 
+            /* 
+                this is critical, otherwise the sequence will continue to run
+                past "first n" limites or ctrl-c cancels ( although the additional data is thrown away)
+            */
             if ( mi_interrupt_check() != 0) {
                 mi_fp_setisdone(fParam, 1);
                 return_SQLnull(0);

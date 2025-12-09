@@ -14,22 +14,13 @@ int main(void) {
     ns_tm_t tm;
 
     /* Basic non-zero checks */
-    a = get_clocktick_ns();
+    a = get_clocktick_ns(CLOCK_REALTIME);
     assert(a > 0 && "get_clocktick_ns returned zero");
 
-    a = get_monotonic_ns();
-    assert(a > 0 && "get_monotonic_ns returned zero");
-
-    a = get_proc_cputime_ns();
-    assert(a > 0 && "get_proc_cputime_ns returned zero");
-
-    a = get_thread_cputime_ns();
-    assert(a > 0 && "get_thread_cputime_ns returned zero");
-
     /* Monotonicity: successive calls should not go backward */
-    a = get_monotonic_ns();
+    a = get_get_clocktick_ns(CLOCK_MONOTONIC);
     usleep(1000); /* 1ms */
-    b = get_monotonic_ns();
+    b = get_get_clocktick_ns(CLOCK_MONOTONIC);
     assert(b >= a && "get_monotonic_ns moved backwards");
 
     /* timespec -> ns_tm conversion (UTC) */

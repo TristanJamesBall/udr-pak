@@ -17,76 +17,6 @@
 
 */
 
-
-mi_datetime *
-threadtime_dt( 
-    MI_FPARAM   *fParam 
-) 
-{
-
-    mi_datetime *ret;
-    timespec_t ts;
-    ns_tm_t tm;
-
-    clock_gettime(CLOCK_THREAD_CPUTIME_ID,&ts);
-
-    ret = udr_alloc_ret(mi_datetime);
-    if isNull(ret) {
-        return_enomem(NULL);
-    }
-
-    timespec_to_ns_tm( &ts, &tm, GMT_TZ );
-    ns_tm_to_datetime(&tm,ret);
-    return(ret);
-}
-
-mi_datetime *
-proctime_dt( 
-    MI_FPARAM   *fParam 
-) 
-{
-
-    mi_datetime *ret;
-    timespec_t ts;
-    ns_tm_t tm;
-
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID,&ts);
-
-    ret = udr_alloc_ret(mi_datetime);
-    if isNull(ret) {
-        return_enomem(NULL);
-    }
-
-    timespec_to_ns_tm( &ts, &tm, GMT_TZ );
-    ns_tm_to_datetime(&tm,ret);
-    return(ret);
-}
-
-
-
-mi_datetime *
-monotime_dt( 
-    MI_FPARAM   *fParam 
-) 
-{
-
-    mi_datetime *ret;
-    timespec_t ts;
-    ns_tm_t tm;
-
-    clock_gettime(CLOCK_MONOTONIC,&ts);
-
-    ret = udr_alloc_ret(mi_datetime);
-    if isNull(ret) {
-        return_enomem(NULL);
-    }
-
-    timespec_to_ns_tm( &ts, &tm, GMT_TZ );
-    ns_tm_to_datetime(&tm,ret);
-    return(ret);
-}
-
-
 mi_datetime *
 realtime_dt( 
     MI_FPARAM   *fParam 
@@ -130,108 +60,98 @@ utc_realtime_dt( MI_FPARAM *fParam ) {
 
 
 
-
-__always_inline uint64_t
-get_proc_cputime_ns(void) {
-    struct timespec ts;
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID,&ts);
-    return (uint64_t) (ts.tv_sec*NSEC) + (ts.tv_nsec);
-}
-
-__always_inline uint64_t
-get_thread_cputime_ns(void) {
-    struct timespec ts;
-    clock_gettime(CLOCK_THREAD_CPUTIME_ID,&ts);
-    return (uint64_t) (ts.tv_sec*NSEC) + (ts.tv_nsec);
-}
-
-/* see man clock_gettime */
-__always_inline uint64_t
-get_monotonic_ns(void) {
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return (uint64_t) (ts.tv_sec*NSEC) + (ts.tv_nsec);
-}
-
 __always_inline uint64_t
 get_clocktick_ns(clockid_t clock) {
     struct timespec ts;
     clock_gettime(clock, &ts);
     return (uint64_t) (ts.tv_sec*NSEC) + (ts.tv_nsec);
 }
-/*
-    realtime_dt_slow
-
-    Returns current real time int datetime year to fraction(5) form, in
-    the locale timezone
-
-    Slower variant doesn't leaverage the mi_decimal storage of datetimes,
-    and rather uses "official" informix or library functions.
-
-    Use this if you have trouble with the nomal versions
-
-*/
 
 
+mi_bigint *
+clocktick(void) {
+    struct timespec ts;
+    mi_bigint *ret;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    ret = udr_alloc_ret(mi_bigint);
+    *ret = ts.tv_sec;
+    return(ret);
+}
 
-mi_datetime *
-realtime_dt_slow( 
-    MI_FPARAM *fParam 
-) {
+mi_decimal *
+clocktick_s(void) {
+    struct timespec ts;
+    mi_decimal frac_part,nsec;
+    mi_decimal *ret;
+    clock_gettime(CLOCK_REALTIME, &ts);
 
-    mi_datetime *ret;
-    timespec_t ts;
-    ns_tm_t tm;
+    ret = udr_alloc_ret(mi_decimal);
+    int64_to_dec(NSEC,&nsec);
+    int64_to_dec(ts.tv_sec,ret);
+    int64_to_dec(ts.tv_nsec,&frac_part);
+    decdiv(&frac_part,&nsec,&frac_part);
+    decadd(ret,&frac_part,ret);
+    dectrunc(ret,9);
 
-
-    clock_gettime(CLOCK_REALTIME,&ts);
-
-    ret = udr_alloc_ret(mi_datetime);
-    if isNull(ret) {
-        return_enomem(NULL);
-    }
-
-    timespec_to_ns_tm( &ts, &tm, LOCAL_TZ );
-    ns_tm_to_datetime_slow(&tm,ret);
     return(ret);
 }
 
 
-/*
-    realtime_slow_dt
+mi_decimal *
+clocktick_ns(void) {
+    struct timespec ts;
+    mi_decimal frac_part,nsec;
+    mi_decimal *ret;
+    clock_gettime(CLOCK_REALTIME, &ts);
 
-    Returns current real time int datetime year to fraction(5) form, in
-    the utc time zone
+    ret = udr_alloc_ret(mi_decimal);
+    int64_to_dec(NSEC,&nsec);
+    int64_to_dec(ts.tv_sec,ret);
+    int64_to_dec(ts.tv_nsec,&frac_part);
+    decmul(ret,&nsec,ret);
+    decadd(ret,&frac_part,ret);
+    dectrunc(ret,0);
 
-    Slower variant doesn't leaverage the mi_decimal storage of datetimes,
-    and rather uses "official" informix or library functions.
-
-    Use this if you have trouble with the nomal versions
-
-*/
-
-
-mi_datetime *
-utc_realtime_dt_slow( 
-    MI_FPARAM *fParam 
-) 
-{
-    mi_datetime *ret;
-    timespec_t ts;
-    ns_tm_t tm;
-
-    clock_gettime(CLOCK_REALTIME,&ts);
-
-    ret = udr_alloc_ret(mi_datetime);
-    if isNull(ret) {
-        return_enomem(NULL);
-    }
-
-    timespec_to_ns_tm( &ts, &tm, GMT_TZ );
-    ns_tm_to_datetime_slow(&tm,ret);
     return(ret);
 }
 
+
+mi_decimal *
+clocktick_us(void) {
+    struct timespec ts;
+    mi_decimal frac_part,usec;
+    mi_decimal *ret;
+    clock_gettime(CLOCK_REALTIME, &ts);
+
+    ret = udr_alloc_ret(mi_decimal);
+    int64_to_dec(USEC,&usec);
+    int64_to_dec(ts.tv_sec,ret);
+    int64_to_dec(ts.tv_nsec/MSEC,&frac_part);
+    decmul(ret,&usec,ret);
+    decadd(ret,&frac_part,ret);
+    dectrunc(ret,0);
+
+    return(ret);
+}
+
+
+mi_decimal *
+clocktick_ms(void) {
+    struct timespec ts;
+    mi_decimal frac_part,msec;
+    mi_decimal *ret;
+    clock_gettime(CLOCK_REALTIME, &ts);
+
+    ret = udr_alloc_ret(mi_decimal);
+    int64_to_dec(MSEC,&msec);
+    int64_to_dec(ts.tv_sec,ret);
+    int64_to_dec(ts.tv_nsec/USEC,&frac_part);
+    decmul(ret,&msec,ret);
+    decadd(ret,&frac_part,ret);
+    dectrunc(ret,0);
+
+    return(ret);
+}
 
 
 
@@ -316,6 +236,80 @@ ns_tm_to_datetime (
     dt->dt_qual=TU_DTENCODE( TU_YEAR,TU_F5);
  
 }
+
+
+
+
+/*
+    realtime_dt_slow
+
+    Returns current real time int datetime year to fraction(5) form, in
+    the locale timezone
+
+    Slower variant doesn't leaverage the mi_decimal storage of datetimes,
+    and rather uses "official" informix or library functions.
+
+    Use this if you have trouble with the nomal versions
+
+*/
+mi_datetime *
+realtime_dt_slow( 
+    MI_FPARAM *fParam 
+) {
+
+    mi_datetime *ret;
+    timespec_t ts;
+    ns_tm_t tm;
+
+
+    clock_gettime(CLOCK_REALTIME,&ts);
+
+    ret = udr_alloc_ret(mi_datetime);
+    if isNull(ret) {
+        return_enomem(NULL);
+    }
+
+    timespec_to_ns_tm( &ts, &tm, LOCAL_TZ );
+    ns_tm_to_datetime_slow(&tm,ret);
+    return(ret);
+}
+
+
+/*
+    realtime_slow_dt
+
+    Returns current real time int datetime year to fraction(5) form, in
+    the utc time zone
+
+    Slower variant doesn't leaverage the mi_decimal storage of datetimes,
+    and rather uses "official" informix or library functions.
+
+    Use this if you have trouble with the nomal versions
+
+*/
+mi_datetime *
+utc_realtime_dt_slow( 
+    MI_FPARAM *fParam 
+) 
+{
+    mi_datetime *ret;
+    timespec_t ts;
+    ns_tm_t tm;
+
+    clock_gettime(CLOCK_REALTIME,&ts);
+
+    ret = udr_alloc_ret(mi_datetime);
+    if isNull(ret) {
+        return_enomem(NULL);
+    }
+
+    timespec_to_ns_tm( &ts, &tm, GMT_TZ );
+    ns_tm_to_datetime_slow(&tm,ret);
+    return(ret);
+}
+
+
+
 
 
 

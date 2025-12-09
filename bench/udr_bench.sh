@@ -12,14 +12,6 @@ typeset -i OUTC=$DBACCESS_COLUMNS
 typeset -A meta
 main() {
 
-	meta=( [h1]="" [h2]="SplitMix only (stateless) Auto Re-Seed every 100 rows" [short_name]="prng2()" )
-	projection_clauses=( "prng3() as prng2")
-	bench_runner 15000000 5
-
-	meta=( [h1]="" [h2]="Row Level (stateless) Auto Re-Seed" [short_name]="prng2()" )
-	projection_clauses=( "prng2() as prng2")
-	bench_runner 15000000 5
-
 	meta=( [h1]="" [h2]="Txn Level Auto Re-Seed" [short_name]="prng()" )
 	projection_clauses=( "prng() as prng")
 	bench_runner 15000000 5

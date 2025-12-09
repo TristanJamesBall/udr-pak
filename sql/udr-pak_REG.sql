@@ -57,17 +57,6 @@ create function if not exists prng() returns bigint
 	language c
 	;
 
-create function if not exists prng2() returns bigint
-	with(VARIANT,HANDLESNULLS, PARALLELIZABLE)
-	external name '$INFORMIXDIR/extend/udr-pak/udr-pak.so(prng2)'
-	language c
-	;
-
-create function if not exists prng3() returns bigint
-	with(VARIANT,HANDLESNULLS, PARALLELIZABLE)
-	external name '$INFORMIXDIR/extend/udr-pak/udr-pak.so(prng3)'
-	language c
-	;
 
 create function if not exists uuidv7() returns lvarchar(36)
 	with(VARIANT,HANDLESNULLS, PARALLELIZABLE)
@@ -103,15 +92,35 @@ create function if not exists realtime() returns datetime year to fraction(5)
 		;
 
 
-
-
-	create function if not exists monotime_dt() returns datetime year to fraction(5) 
+	-- Exact unix utc time, as seconds.fraction - nanosec resolution
+	create function if not exists clocktick() returns bigint
 		with(VARIANT,HANDLESNULLS, PARALLELIZABLE)
-		external name '$INFORMIXDIR/extend/udr-pak/udr-pak.so(monotime_dt)'
+		external name '$INFORMIXDIR/extend/udr-pak/udr-pak.so(clocktick)'
 		language c
 		;
-	create function if not exists threadtime_dt() returns datetime year to fraction(5) 
+
+	-- Exact unix utc time, as seconds.fraction - nanosec resolution
+	create function if not exists clocktick_s() returns decimal(32,9)
 		with(VARIANT,HANDLESNULLS, PARALLELIZABLE)
-		external name '$INFORMIXDIR/extend/udr-pak/udr-pak.so(threadtime_dt)'
+		external name '$INFORMIXDIR/extend/udr-pak/udr-pak.so(clocktick_s)'
+		language c
+		;
+
+	-- Exact unix utc time in nanoseconds, whole number	
+	create function if not exists clocktick_ns() returns decimal(32,0)
+		with(VARIANT,HANDLESNULLS, PARALLELIZABLE)
+		external name '$INFORMIXDIR/extend/udr-pak/udr-pak.so(clocktick_ns)'
+		language c
+		;
+	-- Exact unix utc time in microseconds, whole number
+	create function if not exists clocktick_us() returns decimal(32,0)
+		with(VARIANT,HANDLESNULLS, PARALLELIZABLE)
+		external name '$INFORMIXDIR/extend/udr-pak/udr-pak.so(clocktick_us)'
+		language c
+		;
+	-- Exact unix utc time in milliseconds, whole number
+	create function if not exists clocktick_ms() returns decimal(32,0)
+		with(VARIANT,HANDLESNULLS, PARALLELIZABLE)
+		external name '$INFORMIXDIR/extend/udr-pak/udr-pak.so(clocktick_ms)'
 		language c
 		;
