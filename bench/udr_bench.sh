@@ -1,22 +1,52 @@
 #!/bin/bash
 
+# Yes, this only works on my machine
+case $(uname -n) in
+	gram2) INFORMIXSERVER=${INFORMIXSERVER}_shm ;;
+esac
 
 export TIMEFORMAT="Elapsed: %3R"
 DBNAME=tjb
 FIFO="./.timing.fifo.$$"
 TAB=$'\t'
+OFS="$IFS"
+DL=$'\034'
 trap 'r=$?; rm -f $FIFO; pkill -s 0 -f pv; trap - EXIT HUP INT QUIT; exit $r' EXIT HUP INT QUIT
-
 export DBACCESS_COLUMNS=${COLUMNS:-100}
 typeset -i OUTC=$DBACCESS_COLUMNS
 typeset -A meta
+
+
+
+
 main() {
 
-	meta=( [h1]="" [h2]="Txn Level Auto Re-Seed" [short_name]="prng()" )
-	projection_clauses=( "prng() as prng")
-	bench_runner 15000000 5
+	meta=( [h1]="" [h2]="PRNG with Txn Level Auto Re-Seed" [short_name]="prng()" )
+	projection_clauses=( "prng() as prng" )
+	bench_runner 5000000 5
+
+
+	meta=( [h1]="" [h2]="UUIDv7 with Millisec timestamp and PRNG above" [short_name]="uuid7()" )
+	projection_clauses=( "uuidv7() as prng" )
+	bench_runner 5000000 5
+	
+
+	meta=( [h1]="" [h2]="Realtime timestamps, Year to fraction(5) format, local timezone" [short_name]="realtime_dt()" )
+	projection_clauses=( "realtime_dt() as realtime" )
+	bench_runner 5000000 5
+
+	meta=( [h1]="" [h2]="Realtime timestamps, Unix time as a Decimal(32,9), nanosecond resolution" [short_name]="clocktick_s()" )
+	projection_clauses=( "clocktick_s() as seconds" )
+	bench_runner 5000000 5
 
 	
+	meta=( [h1]="" [h2]="Realtime timestamps, Unix time as a Decimal(32) nanosecond resolution" [short_name]="clocktick_ns()" )
+	projection_clauses=( "clocktick_ns() as nanoseconds" )
+	bench_runner 5000000 5
+
+	meta=( [h1]="" [h2]="Realtime timestamps, Unix time as a Bigint microsecond resolution" [short_name]="clocktick_us()" )
+	projection_clauses=( "clocktick_us() as microseconds" )
+	bench_runner 5000000 5
 }
 
 
@@ -28,8 +58,7 @@ main() {
 if which pv >/dev/null 2>&1 ; then
     pv() {
         label="${1:-Running}"
-        command pv --discard --line-mode --format "${label} - Avg_Lines/Sec: %r  Total_Lines: %b  Elapsed: %t"
-        #command pv --line-mode --format "${label} - Avg_Lines/Sec: %r  Total_Lines: %b  Elapsed: %t" >"output.${short_name}"
+        command pv --discard --line-mode --format "${label}:- Avg_Lines/Sec: %r  Total_Lines: %b  Elapsed: %t"
     }
 else
     pv() {
@@ -58,7 +87,7 @@ bench_runner() {
 	xjoins=${2:-"6"}
 
 
-	h1_text="${meta['h1']}"
+	#h1_text="${meta['h1']}"
 	h2_text="${meta['h2']}"
 	short_name="${meta['short_name']}"
 
@@ -73,16 +102,16 @@ bench_runner() {
 		seq_lines=${tgt_line_count}
 	fi
 
-	echo "Wanted : $tgt_line_count"
-	echo "Fetching $(( seq_lines**xjoins ))"
+#	echo "Wanted : $tgt_line_count"
+#	echo "Fetching $(( seq_lines**xjoins ))"
 	rm -f $FIFO
 	mkfifo $FIFO
 
-	if [[ -n "${h1_text+h1_set}" ]]; then
+#	if [[ -n "${h1_text+h1_set}" ]]; then
 
-		h1_line "$h1_text"
+#		h1_line "$h1_text"
 	
-	fi
+#	fi
 
 	if [[ -n "${h2_text+h2_set}" ]]; then
 
@@ -90,14 +119,33 @@ bench_runner() {
 	
 	fi
 
+	proj_clause() {
+		sep=""; 
+		for prj in "${projection_clauses[@]}" ; do 
+			printf "%s%s\n" "$sep" "$prj"; 
+			sep=","
+		done 
+	}
 
-
-		label="$( printf "%-35.35s" "'${short_name}' ${res_pad_str}" )"
+		label="$( printf "%-35.35s" "${short_name} ${res_pad_str}" )"
 		pv "$label" < $FIFO  &
 		pv_pid=$?
 
 		#dbaccess $DBNAME 2>/dev/null  <<-EOF
 
+		
+		label="$( printf "%-35.35s" "${short_name} example ${res_pad_str}" )"
+
+		run_example() {
+			# this stdout trick is brittle, it doesn't work under ksh, and it might not work
+			# if you're not the owner pf your PTY (eg, because of su/sudo )
+			dbaccess $DBNAME 2>/dev/null <<< "unload to '/dev/stdout' delimiter '$DL' select $( proj_clause ) from sysmaster:sysdual;" 
+		}
+
+		IFS="$DL" 
+		printf "$label:- %s\n" $( run_example ) 
+		IFS="$OFS"
+	
 		{ tee ./prng_bench_run.sql | dbaccess $DBNAME 2>/dev/null ;} <<-EOF
 
 			unload to '$FIFO'

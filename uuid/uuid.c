@@ -27,6 +27,7 @@ uuidv7( MI_FPARAM *fParam) {
     mi_lvarchar *ret;
 
     ts = get_clocktick_ns(CLOCK_REALTIME) / 1000000;
+    set_safe_duration();
 
     /* obtain PRNG values defensively */
     mi_bigint *p1 = prng(fParam);

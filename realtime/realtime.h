@@ -26,17 +26,44 @@ typedef struct {
 
 mi_datetime *realtime_dt( MI_FPARAM *fParam );
 mi_datetime *utc_realtime_dt( MI_FPARAM *fParam );
-
-void timespec_to_ns_tm( const timespec_t *ts, ns_tm_t *tm,const IS_GMT_T is_gmt);
-void ns_tm_to_datetime(const ns_tm_t *tm, mi_datetime *dt);
-
-uint64_t get_clocktick_ns(clockid_t clock);
+/*
+    Might be safer
+    Definitly slower
+    The latter probably isn't enough to matter
+*/
 mi_datetime *realtime_slow_dt( MI_FPARAM *fParam );
 mi_datetime *utc_realtime_slow_dt( MI_FPARAM *fParam );
-void ns_tm_to_datetime_slow(const ns_tm_t *tm, mi_datetime *dt);
 
+
+/* Whole seconds, so bigint is find. 
+   Honestly, fester to use sysmaster:sysdhmvals
+*/
 mi_bigint *clocktick(void);
+/* 
+    nanoseconds can only be represented as a decimal here,  
+    either because we need the fractional resolution, or because of 
+    wrapping risks if we're using whole numbers
+*/
 mi_decimal *clocktick_s(void);
 mi_decimal *clocktick_ns(void);
-mi_decimal *clocktick_ms(void);
-mi_decimal *clocktick_us(void);
+
+/* 
+    safe either way, unless it's several thousand years in the 
+    future in which case I am sorry for many things
+*/
+mi_decimal *dec_clocktick_us(void);
+mi_bigint  *int_clocktick_us(void);
+
+/*
+    Fastest, bigint, even signed is fine. 
+    But miilliseconds are so last year darling
+*/
+mi_bigint *clocktick_ms(void);
+
+
+
+/* internal functions, not accessible to sql*/
+void timespec_to_ns_tm( const timespec_t *ts, ns_tm_t *tm,const IS_GMT_T is_gmt);
+void ns_tm_to_datetime_slow(const ns_tm_t *tm, mi_datetime *dt);
+void ns_tm_to_datetime(const ns_tm_t *tm, mi_datetime *dt);
+uint64_t get_clocktick_ns(clockid_t clock);

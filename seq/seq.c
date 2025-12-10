@@ -120,7 +120,8 @@ mi_integer seq_int( mi_integer p1,mi_integer p2 ,mi_integer p3 ,MI_FPARAM *fPara
     int_seq_t *seq_state = NULL;
     mi_integer ret = -1;
 
-   
+    set_safe_duration();
+
     switch ( mi_fp_request(fParam) ) 
     {
 

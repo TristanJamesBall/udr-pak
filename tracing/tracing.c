@@ -28,7 +28,7 @@ udr_trace_configure(
 ) {
     char trace_cmd[TRACE_STR_LEN];
     mi_lvarchar *ret;
-
+    set_safe_duration();
 
 #ifdef MI_SERVERBUILD
     mi_tracefile_set( 
@@ -60,6 +60,7 @@ udr_trace_set(
     MI_FPARAM   *fPparam 
 ) {
     char trace_cmd[TRACE_STR_LEN+2];
+    set_safe_duration();
 
 
     lvl = nvl2Arg(fPparam,0,lvl,1);
@@ -78,6 +79,7 @@ udr_trace_set(
 
 void 
 udr_trace_on( void ) {
+    set_safe_duration();
 
     _mi_tracelevel_set("udrpak_mem 1");
     _mi_tracelevel_set("udrpak 1");
@@ -87,6 +89,7 @@ udr_trace_on( void ) {
 
 void 
 udr_trace_off( void ) {
+    set_safe_duration();
 
     _mi_tracelevel_set("udrpak_mem 0");
     _mi_tracelevel_set("udrpak 0");
@@ -100,6 +103,7 @@ mi_bigint
 udr_trace_test( 
     MI_FPARAM *fParam 
 ) {
+    set_safe_duration();
 
     udr_trace_set(2,fParam);
     trace(1,"Lvl 1 Should Not Be Visible");

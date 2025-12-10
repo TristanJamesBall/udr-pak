@@ -1,12 +1,12 @@
 
-unload to './.timing.fifo.1406082'
+unload to './.timing.fifo.1840362'
 select 
-limit 15000000
-prng() as prng
+limit 5000000
+clocktick_us() as microseconds
 from	
-table(seq(1,1,28))
-cross join table(seq(1,1,28))
-cross join table(seq(1,1,28))
-cross join table(seq(1,1,28))
-cross join table(seq(1,1,28))
+table(seq(1,1,22))
+cross join table(seq(1,1,22))
+cross join table(seq(1,1,22))
+cross join table(seq(1,1,22))
+cross join table(seq(1,1,22))
 ;

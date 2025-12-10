@@ -32,39 +32,29 @@ init_xsr256_state(
 ) {
 
     xsr256_state_t *s;
-    uint64_t sid,sm64_z;
+    uint64_t sm64_z;
     uint32_t i;
     timespec_t ts;
     clockid_t clocks[] = {CLOCK_REALTIME,CLOCK_MONOTONIC,CLOCK_THREAD_CPUTIME_ID,CLOCK_REALTIME};
 
-            
     s = (xsr256_state_t *)get_func_state_ptr(sizeof(xsr256_state_t),fParam);
     if ( isNull(s) ) {
         return_enomem(NULL);
     }
 
-#ifdef  MI_SERVBUILD
-    if isNull(s->conn) {
-        /* Only do this once. If mi_open fails, raise an MI error and abort.
-         * mi_open allocates memory in the Informix allocator; handle failures. */
-        s->conn = mi_open(NULL, NULL, NULL);
-        if ( isNull(s->conn) ) {
-            return_enomem(NULL);
+    if ( s->sid == 0 ) {
+        get_session_id(&s->sid,fParam);         
+        if ( s->sid == 0 ) {
+            mi_db_error_raise( NULL, MI_EXCEPTION,__FILE__ ": UDR Can't get session ID!, Aborting");
+            return(NULL); 
         }
     }
-    sid = (uint64_t)mi_get_id(s->conn, MI_SESSION_ID);
-#else
-    //dummy for testing outside server
-    sid = 1;
-#endif    
-        
     
-
     for(i=0;i <= 3; i++ ) {
 
         clock_gettime(clocks[i], &ts);
 
-        s->sm64_x = ( ( (uint64_t)(ts.tv_sec*NSEC)+ts.tv_nsec) ^( (sid & 0xffffffffULL ) <<32) );
+        s->sm64_x = ( ( (uint64_t)(ts.tv_sec*NSEC)+ts.tv_nsec) ^( (s->sid & 0xffffffffULL ) <<32) );
 
         sm64_z = (s->sm64_x += 0x9e3779b97f4a7c15ULL);
         sm64_z = (sm64_z ^ (sm64_z >> 30)) * 0xbf58476d1ce4e5b9ULL;
@@ -75,12 +65,13 @@ init_xsr256_state(
     return(s);
 }
 
-/* interfact wrapper, could probably be factored out now*/
+/* interface wrapper, could probably be factored out now*/
 mi_bigint *
 xoshiro256_star_star(MI_FPARAM *fParam) {
     mi_bigint *ret;
     uint64_t uret;
     xsr256_state_t *s;
+    set_safe_duration();
 
 
     s = init_xsr256_state(fParam);

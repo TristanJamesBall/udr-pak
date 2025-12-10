@@ -11,7 +11,7 @@ typedef struct timespec timespec_t;
 typedef struct {
     uint64_t xsr_s[4];   // the xoro* function state
     uint64_t sm64_x;     // splitmix64 seed
-    MI_CONNECTION *conn;                    
+    uint64_t sid;                 
 } xsr256_state_t;
 
 xsr256_state_t* init_xsr256_state(MI_FPARAM *fParam);

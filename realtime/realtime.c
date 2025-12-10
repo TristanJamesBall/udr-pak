@@ -28,6 +28,7 @@ realtime_dt(
     ns_tm_t tm;
 
     clock_gettime(CLOCK_REALTIME,&ts);
+    set_safe_duration();
 
     ret = udr_alloc_ret(mi_datetime);
     if isNull(ret) {
@@ -47,6 +48,7 @@ utc_realtime_dt( MI_FPARAM *fParam ) {
         ns_tm_t tm;
 
         clock_gettime(CLOCK_REALTIME,&ts);
+        set_safe_duration();
 
         ret = udr_alloc_ret(mi_datetime);
         if isNull(ret) {
@@ -73,6 +75,8 @@ clocktick(void) {
     struct timespec ts;
     mi_bigint *ret;
     clock_gettime(CLOCK_REALTIME, &ts);
+    set_safe_duration();
+
     ret = udr_alloc_ret(mi_bigint);
     *ret = ts.tv_sec;
     return(ret);
@@ -84,6 +88,7 @@ clocktick_s(void) {
     mi_decimal frac_part,nsec;
     mi_decimal *ret;
     clock_gettime(CLOCK_REALTIME, &ts);
+    set_safe_duration();
 
     ret = udr_alloc_ret(mi_decimal);
     int64_to_dec(NSEC,&nsec);
@@ -103,6 +108,7 @@ clocktick_ns(void) {
     mi_decimal frac_part,nsec;
     mi_decimal *ret;
     clock_gettime(CLOCK_REALTIME, &ts);
+    set_safe_duration();
 
     ret = udr_alloc_ret(mi_decimal);
     int64_to_dec(NSEC,&nsec);
@@ -117,11 +123,12 @@ clocktick_ns(void) {
 
 
 mi_decimal *
-clocktick_us(void) {
+dec_clocktick_us(void) {
     struct timespec ts;
     mi_decimal frac_part,usec;
     mi_decimal *ret;
     clock_gettime(CLOCK_REALTIME, &ts);
+    set_safe_duration();
 
     ret = udr_alloc_ret(mi_decimal);
     int64_to_dec(USEC,&usec);
@@ -134,21 +141,30 @@ clocktick_us(void) {
     return(ret);
 }
 
+mi_bigint *
+int_clocktick_us(void) {
+    struct timespec ts;
+    mi_bigint *ret;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    set_safe_duration();
 
-mi_decimal *
+    ret = udr_alloc_ret(mi_bigint);
+    *ret = ( ts.tv_sec * USEC ) + (ts.tv_nsec/MSEC);
+
+    return(ret);
+}
+
+
+
+mi_bigint *
 clocktick_ms(void) {
     struct timespec ts;
-    mi_decimal frac_part,msec;
-    mi_decimal *ret;
+    mi_bigint *ret;
     clock_gettime(CLOCK_REALTIME, &ts);
+    set_safe_duration();
 
-    ret = udr_alloc_ret(mi_decimal);
-    int64_to_dec(MSEC,&msec);
-    int64_to_dec(ts.tv_sec,ret);
-    int64_to_dec(ts.tv_nsec/USEC,&frac_part);
-    decmul(ret,&msec,ret);
-    decadd(ret,&frac_part,ret);
-    dectrunc(ret,0);
+    ret = udr_alloc_ret(mi_bigint);
+    *ret = ( ts.tv_sec * MSEC ) + (ts.tv_nsec/USEC);
 
     return(ret);
 }
@@ -263,6 +279,7 @@ realtime_dt_slow(
 
 
     clock_gettime(CLOCK_REALTIME,&ts);
+    set_safe_duration();
 
     ret = udr_alloc_ret(mi_datetime);
     if isNull(ret) {
@@ -297,6 +314,7 @@ utc_realtime_dt_slow(
     ns_tm_t tm;
 
     clock_gettime(CLOCK_REALTIME,&ts);
+    set_safe_duration();
 
     ret = udr_alloc_ret(mi_datetime);
     if isNull(ret) {
