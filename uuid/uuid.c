@@ -1,15 +1,16 @@
 // vim: set ts=4 sw=4 et:
 #include <dmi/mi.h>
+#include <inttypes.h>
+#include <time.h>
 #include "../runtime/runtime.h"
 #include "../realtime/realtime.h"
 #include "../prng/prng.h"
-#include <time.h>
 
-#define BitMask48 0xffffffffffff
-#define BitMask32 0xffffffff
-#define BitMask16 0xffff
-#define BitMask8  0xff
-#define UUID_STR 40
+#define BitMask48 0x0000ffffffffffffULL
+#define BitMask32 0xffffffffU
+#define BitMask16 0xffffU
+#define BitMask8  0xffU
+#define UUID_STR 36
 
 typedef union {
     uint8_t     b[16];
@@ -27,24 +28,37 @@ uuidv7( MI_FPARAM *fParam) {
 
     ts = get_clocktick_ns(CLOCK_REALTIME) / 1000000;
 
+    /* obtain PRNG values defensively */
+    mi_bigint *p1 = prng(fParam);
+    if ( isNull(p1) ) {
+        return_enomem(NULL);
+    }
 
-    uuid.qw[0] = (ts << 16) + ( 0x7000 + ((uint64_t)*prng(fParam) & 0xfff) );
-    uuid.qw[1] = (0x2ULL << 62) + (  (uint64_t)*prng(fParam) & 0x3fffffffffffffff );
-    
+    mi_bigint *p2 = prng(fParam);
+    if ( isNull(p2) ) {
+        return_enomem(NULL);
+    }
+
+    uuid.qw[0] = (ts << 16) + ( 0x7000 + ((uint64_t)(*p1) & 0xfffULL) );
+    uuid.qw[1] = (0x2ULL << 62) + (  (uint64_t)(*p2) & 0x3fffffffffffffffULL );
+
     //snprintf( uuid_str, 40, "[%lx][%lx]", uuid.qw[0], uuid.qw[1] );
     //8-4-4-4-12
-    //32 16-16-16-48
+    //32-16-16-16-48
     
-    snprintf( uuid_str, 40, "%08lx-%04lx-%04lx-%04lx-%012lx", 
-            (uuid.qw[0] >> 32) & 0xffffffff,
-            (uuid.qw[0] >> 16) & 0xffff,
-            (uuid.qw[0]) & 0xffff,
-            (uuid.qw[1] >> 48) & 0xffff,
-            (uuid.qw[1]) & BitMask48
-            );
+    snprintf( uuid_str, 40, "%08x-%04x-%04x-%04x-%012lx", 
+        (uint32_t)((uuid.qw[0] >> 32) & BitMask32),
+        (uint16_t)((uuid.qw[0] >> 16) & BitMask16),
+        (uint16_t)(uuid.qw[0] & BitMask16),
+        (uint16_t)((uuid.qw[1] >> 48) & BitMask16),
+        (uint64_t)(uuid.qw[1] & BitMask48)
+        );
+
     ret = mi_new_var( UUID_STR );
-    //mi_set_varptr( ret, uuid_str );
+    if ( isNull(ret) ) {
+        return_enomem(NULL);
+    }
     mi_set_vardata( ret, uuid_str );
-    return( ret );
+    return ret;
 }
 

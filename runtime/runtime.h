@@ -25,7 +25,7 @@
         mi_fp_setreturnisnull(fParam, 0, MI_TRUE); \
         mi_db_error_raise( \
             NULL, MI_EXCEPTION,__FILE__ \
-            ": UDR Extension emoory allocation failure, Aborting" \
+            ": UDR Extension memory allocation failure, Aborting" \
         ); return(x)
 
 #define return_SQLnull(r)   \

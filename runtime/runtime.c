@@ -1,6 +1,7 @@
 // vim: set ts=4 sw=4 et:
 #include "../tracing/tracing.h"
 #include "runtime.h"
+#include <string.h>
 
 
 __always_inline void *

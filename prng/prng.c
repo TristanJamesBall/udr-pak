@@ -39,13 +39,18 @@ init_xsr256_state(
 
             
     s = (xsr256_state_t *)get_func_state_ptr(sizeof(xsr256_state_t),fParam);
+    if ( isNull(s) ) {
+        return_enomem(NULL);
+    }
 
 #ifdef  MI_SERVBUILD
     if isNull(s->conn) {
-        // Only do this once, as mi_connect allocates memory in PER_STMT_EXEC 
-        // (aka, it's new memory every time, but it hangs around until the end 
-        // the statement. 
+        /* Only do this once. If mi_open fails, raise an MI error and abort.
+         * mi_open allocates memory in the Informix allocator; handle failures. */
         s->conn = mi_open(NULL, NULL, NULL);
+        if ( isNull(s->conn) ) {
+            return_enomem(NULL);
+        }
     }
     sid = (uint64_t)mi_get_id(s->conn, MI_SESSION_ID);
 #else
@@ -79,7 +84,14 @@ xoshiro256_star_star(MI_FPARAM *fParam) {
 
 
     s = init_xsr256_state(fParam);
+    if ( isNull(s) ) {
+        return_enomem(NULL);
+    }
+
     ret = udr_alloc_ret(mi_bigint);
+    if ( isNull(ret) ) {
+        return_enomem(NULL);
+    }
 
     _xoshiro256_star_star(&uret,s,fParam);
     *ret = (int64_t)uret;
