@@ -39,4 +39,3 @@ PR checklist for AI agents
 - If adding exports, update sql/udr-pak_REG.sql (and UNREG) lines in the same PR.
 - Avoid '.' in trace class names and don't change systraceclasses structure without DB verification.
 
-If you want, I can also add CONTRIBUTING.md or a PR template next.

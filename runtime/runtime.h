@@ -73,12 +73,6 @@
 #define FRAC2  (long)100
 #define FRAC1  (long)10
 
-/* These are for datetime year to fraction conversions*/
-#define DYEAR  (long)10000000000
-#define DMON   (long)100000000
-#define DDAY   (long)1000000
-#define DHOUR  (long)10000
-#define DMIN   (long)100
 
 #define int16_to_dec( int_val, dec_ptr )		deccvint(    int_val, dec_ptr )
 #define int32_to_dec( int_val, dec_ptr )		deccvlong(   int_val, dec_ptr )
@@ -91,6 +85,4 @@
 void * get_func_state_ptr(size_t sz, MI_FPARAM *fParam);
 void get_session_id(uint64_t *sid, MI_FPARAM *fParam);
 
-
-mi_integer udr_fn(mi_lvarchar *trc, MI_FPARAM *fParam);
 

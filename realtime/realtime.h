@@ -6,6 +6,12 @@
 #include <time.h>
 
 
+/* These are for datetime year to fraction conversions*/
+#define DYEAR  (long)10000000000
+#define DMON   (long)100000000
+#define DDAY   (long)1000000
+#define DHOUR  (long)10000
+#define DMIN   (long)100
 
 typedef enum is_gmt{
     LOCAL_TZ,

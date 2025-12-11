@@ -57,21 +57,25 @@ udr_trace_configure(
 void 
 udr_trace_set( 
     int         lvl, 
-    MI_FPARAM   *fPparam 
+    MI_FPARAM   *fParam 
 ) {
     char trace_cmd[TRACE_STR_LEN+2];
     set_safe_duration();
 
 
-    lvl = nvl2Arg(fPparam,0,lvl,1);
+    lvl = nvl2Arg(fParam,0,lvl,1);
     
     snprintf( trace_cmd, TRACE_STR_LEN, "udrpak_mem %3d", (int8_t)lvl );
+    _mi_tracelevel_set(trace_cmd);
 
+    /*reset our buffer*/
     udr_memset(trace_cmd,TRACE_STR_LEN+2,'\0');
     snprintf( trace_cmd, TRACE_STR_LEN, "udrpak %3d", (int8_t)lvl );
+    _mi_tracelevel_set(trace_cmd);
 
     udr_memset(trace_cmd,TRACE_STR_LEN+2,'\0');
     snprintf( trace_cmd, TRACE_STR_LEN, "__myErrors__ %3d", (int8_t)lvl );
+    _mi_tracelevel_set(trace_cmd);
     
 
 }

@@ -31,7 +31,7 @@ realtime_dt(
     set_safe_duration();
 
     ret = udr_alloc_ret(mi_datetime);
-    if isNull(ret) {
+    if(isNull(ret) ){
         return_enomem(NULL);
     }
 
@@ -51,7 +51,7 @@ utc_realtime_dt( MI_FPARAM *fParam ) {
         set_safe_duration();
 
         ret = udr_alloc_ret(mi_datetime);
-        if isNull(ret) {
+        if( isNull(ret) ){
             return_enomem(NULL);
         }
 
@@ -282,7 +282,7 @@ realtime_dt_slow(
     set_safe_duration();
 
     ret = udr_alloc_ret(mi_datetime);
-    if isNull(ret) {
+    if(isNull(ret) ){
         return_enomem(NULL);
     }
 
@@ -317,7 +317,7 @@ utc_realtime_dt_slow(
     set_safe_duration();
 
     ret = udr_alloc_ret(mi_datetime);
-    if isNull(ret) {
+    if( isNull(ret) ){
         return_enomem(NULL);
     }
 

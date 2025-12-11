@@ -50,6 +50,12 @@ mi_integer seq_int_init(mi_integer p1,mi_integer p2 ,mi_integer p3 ,MI_FPARAM *f
        So, this is how we map the different combinations of our 3 parameters being
        set, or null, into the "1, 2, or 3" variants we care about
     */
+
+    /* 
+        In the switch be, 1's on the PMAP_ represent parameters that are
+        set, left to right, so PMAP_101 would be when P1 and P3 are set, but
+        p2 is null
+    */
     switch (p_map) {
 
         case PMAP_001:

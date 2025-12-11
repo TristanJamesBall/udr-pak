@@ -1,6 +1,7 @@
 // vim: set ts=4 sw=4 et:
 #include "../tracing/tracing.h"
 #include "runtime.h"
+#include "../realtime/realtime.h"
 #include <string.h>
 
 
@@ -32,7 +33,7 @@ get_func_state_ptr(size_t sz, MI_FPARAM *fParam) {
 
         ustate = mi_fp_funcstate( fParam );
 
-        if isNull(ustate)  {
+        if( isNull(ustate) ) {
 
                 if( ! (ustate = udr_alloc_bytes(sz) )) {
                     return_enomem(NULL);
@@ -43,24 +44,6 @@ get_func_state_ptr(size_t sz, MI_FPARAM *fParam) {
         }
 
         return( ustate );
-}
-
-
-struct fn_state {
-    int count;
-}; 
-
-mi_integer
-udr_fn(mi_lvarchar *trc, MI_FPARAM *fParam) {
-    struct fn_state  *ustate = NULL;
-    //char *trc_s = mi_lvarchar_to_string(trc);
-    //t race(5,"%s",trc_s);
-
-    ustate = (struct fn_state *)get_func_state_ptr(sizeof(struct fn_state),fParam);
-    ustate->count++;
-    //t race(1,"State at %lx count is: %d",ustate,ustate->count);
-
-    return(ustate->count);
 }
 
 

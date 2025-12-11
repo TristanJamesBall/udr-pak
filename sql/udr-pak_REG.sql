@@ -40,11 +40,6 @@ where not exists ( select 1 from systraceclasses where name = ins.name) ;
 --execute procedure udr_trace_off();
 
 
-CREATE FUNCTION IF NOT EXISTS udr_fn(trc lvarchar(24)) returning int
-WITH (VARIANT)
-EXTERNAL NAME '$INFORMIXDIR/extend/udr-pak/udr-pak.so(udr_fn)'
-LANGUAGE C;
-
 
 create function if not exists seq(
 	p1 int default null,

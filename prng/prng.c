@@ -69,7 +69,6 @@ init_xsr256_state(
 mi_bigint *
 xoshiro256_star_star(MI_FPARAM *fParam) {
     mi_bigint *ret;
-    uint64_t uret;
     xsr256_state_t *s;
     set_safe_duration();
 
@@ -84,8 +83,7 @@ xoshiro256_star_star(MI_FPARAM *fParam) {
         return_enomem(NULL);
     }
 
-    _xoshiro256_star_star(&uret,s,fParam);
-    *ret = (int64_t)uret;
+    _xoshiro256_star_star((uint64_t *)&ret,s,fParam);
 
     return(ret);
 }
@@ -94,11 +92,11 @@ xoshiro256_star_star(MI_FPARAM *fParam) {
 void _xoshiro256_star_star(uint64_t *r, xsr256_state_t *s,  MI_FPARAM *fParam) {
     uint64_t t;
 
-    if isNull(s) {
+    if( isNull(s) ){
         s = init_xsr256_state(fParam);
     } 
-    if isNull(s) {
-        return; //_enomem();
+    if( isNull(s) ){
+        abort_enomem();
     }
 
     

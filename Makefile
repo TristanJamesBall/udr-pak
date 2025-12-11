@@ -40,7 +40,7 @@ OBJECTS = $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 # Create object file names based on source files
 CLIENT_OBJECTS = $(patsubst %.c,$(CLIENT_OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all clean
+.PHONY: all clean format
 
 
 all: $(LIBDIR) $(OBJDIR) $(CLIENT_OBJDIR) $(TARGET)
@@ -109,6 +109,13 @@ $(CLIENT_OBJDIR)/%.o: uuid/%.c
 
 clean:
 	${RM} $(OBJECTS) $(LIBDIR)/$(TARGET).so 
+
+
+.PHONY: format
+format:
+	@command -v clang-format >/dev/null 2>&1 || { echo "clang-format not found; install clang-format to run this target"; exit 1; }
+	@echo "Formatting C sources with clang-format..."
+	@find . -name '*.c' -o -name '*.h' | xargs clang-format -i || true
 
 
 TEST_BIN_DIR = build/bin
