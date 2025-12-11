@@ -1,6 +1,5 @@
 // Simple unit tests for realtime helpers
 #include <assert.h>
-#include <dmi/mitrace.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>
@@ -18,9 +17,9 @@ int main(void) {
     assert(a > 0 && "get_clocktick_ns returned zero");
 
     /* Monotonicity: successive calls should not go backward */
-    a = get_get_clocktick_ns(CLOCK_MONOTONIC);
+    a = get_clocktick_ns(CLOCK_MONOTONIC);
     usleep(1000); /* 1ms */
-    b = get_get_clocktick_ns(CLOCK_MONOTONIC);
+    b = get_clocktick_ns(CLOCK_MONOTONIC);
     assert(b >= a && "get_monotonic_ns moved backwards");
 
     /* timespec -> ns_tm conversion (UTC) */
