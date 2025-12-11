@@ -1,12 +1,12 @@
 // Simple unit tests for realtime helpers
-#include <stdio.h>
-#include <stdint.h>
 #include <assert.h>
-#include <unistd.h>
+#include <dmi/mitrace.h>
+#include <stdint.h>
+#include <stdio.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "../realtime/realtime.h"
-#include <dmi/mitrace.h>
 
 int main(void) {
     uint64_t a, b;
