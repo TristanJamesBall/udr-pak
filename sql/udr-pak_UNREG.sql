@@ -8,6 +8,7 @@ DROP PROCEDURE if exists udr_trace_set;
 DROP PROCEDURE if exists udr_trace_on;
 DROP PROCEDURE if exists udr_trace_off;
 DROP PROCEDURE if exists udr_trace_test;
+DROP PROCEDURE IF EXISTS udr_trace_configure;
 
 
 DROP FUNCTION IF EXISTS clocktick;
@@ -22,7 +23,6 @@ DROP FUNCTION IF EXISTS utc_realtime_dt;
 DROP FUNCTION IF EXISTS fast_realtime_dt;
 DROP FUNCTION IF EXISTS fast_utc_realtime_dt;
 DROP FUNCTION IF EXISTS fast_utc_realtime_dt2;
-DROP PROCEDURE IF EXISTS udr_trace_configure;
 
 delete from systraceclasses
 where name in (

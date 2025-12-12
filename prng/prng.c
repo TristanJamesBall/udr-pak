@@ -16,9 +16,7 @@
     This Code release under the same license
 */
 
-static inline uint64_t rotl(const uint64_t x, int k) {
-    return (x << k) | (x >> (64 - k));
-}
+static inline uint64_t rotl(const uint64_t x, int k) { return (x << k) | (x >> (64 - k)); }
 
 /*
     seeding and state
@@ -27,14 +25,14 @@ static inline uint64_t rotl(const uint64_t x, int k) {
     set of 4 uint64_t state values for the prng below to start with
 
 */
-xsr256_state_t* init_xsr256_state(MI_FPARAM* fParam) {
-    xsr256_state_t* s;
-    uint64_t sm64_z;
-    uint32_t i;
-    timespec_t ts;
-    clockid_t clocks[] = {CLOCK_REALTIME, CLOCK_MONOTONIC, CLOCK_THREAD_CPUTIME_ID, CLOCK_REALTIME};
+xsr256_state_t *init_xsr256_state(MI_FPARAM *fParam) {
+    xsr256_state_t *s;
+    uint64_t        sm64_z;
+    uint32_t        i;
+    timespec_t      ts;
+    clockid_t       clocks[] = {CLOCK_REALTIME, CLOCK_MONOTONIC, CLOCK_THREAD_CPUTIME_ID, CLOCK_REALTIME};
 
-    s = (xsr256_state_t*)get_func_state_ptr(sizeof(xsr256_state_t), fParam);
+    s = (xsr256_state_t *)get_func_state_ptr(sizeof(xsr256_state_t), fParam);
     if (isNull(s)) {
         return_enomem(NULL);
     }
@@ -50,8 +48,7 @@ xsr256_state_t* init_xsr256_state(MI_FPARAM* fParam) {
     for (i = 0; i <= 3; i++) {
         clock_gettime(clocks[i], &ts);
 
-        s->sm64_x =
-            (((uint64_t)(ts.tv_sec * NSEC) + ts.tv_nsec) ^ ((s->sid & 0xffffffffULL) << 32));
+        s->sm64_x = (((uint64_t)(ts.tv_sec * NSEC) + ts.tv_nsec) ^ ((s->sid & 0xffffffffULL) << 32));
 
         sm64_z = (s->sm64_x += 0x9e3779b97f4a7c15ULL);
         sm64_z = (sm64_z ^ (sm64_z >> 30)) * 0xbf58476d1ce4e5b9ULL;
@@ -63,9 +60,9 @@ xsr256_state_t* init_xsr256_state(MI_FPARAM* fParam) {
 }
 
 /* interface wrapper, could probably be factored out now*/
-mi_bigint* xoshiro256_star_star(MI_FPARAM* fParam) {
-    mi_bigint* ret;
-    xsr256_state_t* s;
+mi_bigint *xoshiro256_star_star(MI_FPARAM *fParam) {
+    mi_bigint      *ret;
+    xsr256_state_t *s;
     set_safe_duration();
 
     s = init_xsr256_state(fParam);
@@ -78,12 +75,12 @@ mi_bigint* xoshiro256_star_star(MI_FPARAM* fParam) {
         return_enomem(NULL);
     }
 
-    _xoshiro256_star_star((uint64_t*)&ret, s, fParam);
+    _xoshiro256_star_star((uint64_t *)ret, s, fParam);
 
     return (ret);
 }
 
-void _xoshiro256_star_star(uint64_t* r, xsr256_state_t* s, MI_FPARAM* fParam) {
+void _xoshiro256_star_star(uint64_t *r, xsr256_state_t *s, MI_FPARAM *fParam) {
     uint64_t t;
 
     if (isNull(s)) {
@@ -94,14 +91,14 @@ void _xoshiro256_star_star(uint64_t* r, xsr256_state_t* s, MI_FPARAM* fParam) {
     }
 
     *r = (rotl(s->xsr_s[1] * 5, 7) * 9) >> 1;
-    t = s->xsr_s[1] << 17;
+    t  = s->xsr_s[1] << 17;
 
     s->xsr_s[2] ^= s->xsr_s[0];
     s->xsr_s[3] ^= s->xsr_s[1];
     s->xsr_s[1] ^= s->xsr_s[2];
     s->xsr_s[0] ^= s->xsr_s[3];
     s->xsr_s[2] ^= t;
-    s->xsr_s[3] = rotl(s->xsr_s[3], 45);
+    s->xsr_s[3]  = rotl(s->xsr_s[3], 45);
 
     return;
 }

@@ -18,10 +18,10 @@
 
 */
 
-mi_datetime* realtime_dt(MI_FPARAM* fParam) {
-    mi_datetime* ret;
-    timespec_t ts;
-    ns_tm_t tm;
+mi_datetime *realtime_dt(MI_FPARAM *fParam) {
+    mi_datetime *ret;
+    timespec_t   ts;
+    ns_tm_t      tm;
 
     clock_gettime(CLOCK_REALTIME, &ts);
     set_safe_duration();
@@ -36,10 +36,10 @@ mi_datetime* realtime_dt(MI_FPARAM* fParam) {
     return (ret);
 }
 
-mi_datetime* utc_realtime_dt(MI_FPARAM* fParam) {
-    mi_datetime* ret;
-    timespec_t ts;
-    ns_tm_t tm;
+mi_datetime *utc_realtime_dt(MI_FPARAM *fParam) {
+    mi_datetime *ret;
+    timespec_t   ts;
+    ns_tm_t      tm;
 
     clock_gettime(CLOCK_REALTIME, &ts);
     set_safe_duration();
@@ -60,21 +60,21 @@ __always_inline uint64_t get_clocktick_ns(clockid_t clock) {
     return (uint64_t)(ts.tv_sec * NSEC) + (ts.tv_nsec);
 }
 
-mi_bigint* clocktick(void) {
+mi_bigint *clocktick(void) {
     struct timespec ts;
-    mi_bigint* ret;
+    mi_bigint      *ret;
     clock_gettime(CLOCK_REALTIME, &ts);
     set_safe_duration();
 
-    ret = udr_alloc_ret(mi_bigint);
+    ret  = udr_alloc_ret(mi_bigint);
     *ret = ts.tv_sec;
     return (ret);
 }
 
-mi_decimal* clocktick_s(void) {
+mi_decimal *clocktick_s(void) {
     struct timespec ts;
-    mi_decimal frac_part, nsec;
-    mi_decimal* ret;
+    mi_decimal      frac_part, nsec;
+    mi_decimal     *ret;
     clock_gettime(CLOCK_REALTIME, &ts);
     set_safe_duration();
 
@@ -89,10 +89,10 @@ mi_decimal* clocktick_s(void) {
     return (ret);
 }
 
-mi_decimal* clocktick_ns(void) {
+mi_decimal *clocktick_ns(void) {
     struct timespec ts;
-    mi_decimal frac_part, nsec;
-    mi_decimal* ret;
+    mi_decimal      frac_part, nsec;
+    mi_decimal     *ret;
     clock_gettime(CLOCK_REALTIME, &ts);
     set_safe_duration();
 
@@ -107,10 +107,10 @@ mi_decimal* clocktick_ns(void) {
     return (ret);
 }
 
-mi_decimal* dec_clocktick_us(void) {
+mi_decimal *dec_clocktick_us(void) {
     struct timespec ts;
-    mi_decimal frac_part, usec;
-    mi_decimal* ret;
+    mi_decimal      frac_part, usec;
+    mi_decimal     *ret;
     clock_gettime(CLOCK_REALTIME, &ts);
     set_safe_duration();
 
@@ -125,31 +125,31 @@ mi_decimal* dec_clocktick_us(void) {
     return (ret);
 }
 
-mi_bigint* int_clocktick_us(void) {
+mi_bigint *int_clocktick_us(void) {
     struct timespec ts;
-    mi_bigint* ret;
+    mi_bigint      *ret;
     clock_gettime(CLOCK_REALTIME, &ts);
     set_safe_duration();
 
-    ret = udr_alloc_ret(mi_bigint);
+    ret  = udr_alloc_ret(mi_bigint);
     *ret = (ts.tv_sec * USEC) + (ts.tv_nsec / MSEC);
 
     return (ret);
 }
 
-mi_bigint* clocktick_ms(void) {
+mi_bigint *clocktick_ms(void) {
     struct timespec ts;
-    mi_bigint* ret;
+    mi_bigint      *ret;
     clock_gettime(CLOCK_REALTIME, &ts);
     set_safe_duration();
 
-    ret = udr_alloc_ret(mi_bigint);
+    ret  = udr_alloc_ret(mi_bigint);
     *ret = (ts.tv_sec * MSEC) + (ts.tv_nsec / USEC);
 
     return (ret);
 }
 
-inline void timespec_to_ns_tm(const timespec_t* ts, ns_tm_t* tm, const IS_GMT_T is_gmt) {
+inline void timespec_to_ns_tm(const timespec_t *ts, ns_tm_t *tm, const IS_GMT_T is_gmt) {
     if (is_gmt) {
         gmtime_r(&ts->tv_sec, &tm->tm);
     } else {
@@ -174,13 +174,13 @@ inline void timespec_to_ns_tm(const timespec_t* ts, ns_tm_t* tm, const IS_GMT_T 
 
 */
 
-inline void ns_tm_to_datetime(const ns_tm_t* tm, mi_datetime* dt) {
+inline void ns_tm_to_datetime(const ns_tm_t *tm, mi_datetime *dt) {
     int64_t int_time;
-    dec_t frac_part, nsec;
+    dec_t   frac_part, nsec;
 
     /*
-        these multipliers are spefifically for "year to second" -> "year to fraction"
-        the intent is to create a number that looks like
+        these multipliers are spefifically for "year to second" -> "year to
+       fraction" the intent is to create a number that looks like
 
         20241231235959
         or
@@ -189,9 +189,8 @@ inline void ns_tm_to_datetime(const ns_tm_t* tm, mi_datetime* dt) {
         Because that, in MI_DECIMAL form, is how how datetime's are represented!
 
     */
-    int_time = ((((long)tm->tm.tm_year + 1900) * DYEAR) + (((long)tm->tm.tm_mon + 1) * DMON) +
-                ((long)tm->tm.tm_mday * DDAY) + ((long)tm->tm.tm_hour * DHOUR) +
-                ((long)tm->tm.tm_min * DMIN) + ((long)tm->tm.tm_sec));
+    int_time = ((((long)tm->tm.tm_year + 1900) * DYEAR) + (((long)tm->tm.tm_mon + 1) * DMON) + ((long)tm->tm.tm_mday * DDAY) +
+                ((long)tm->tm.tm_hour * DHOUR) + ((long)tm->tm.tm_min * DMIN) + ((long)tm->tm.tm_sec));
 
     /*
         I did test a time->string->decimal version, which requires fewer function
@@ -223,10 +222,10 @@ inline void ns_tm_to_datetime(const ns_tm_t* tm, mi_datetime* dt) {
     Use this if you have trouble with the nomal versions
 
 */
-mi_datetime* realtime_dt_slow(MI_FPARAM* fParam) {
-    mi_datetime* ret;
-    timespec_t ts;
-    ns_tm_t tm;
+mi_datetime *realtime_dt_slow(MI_FPARAM *fParam) {
+    mi_datetime *ret;
+    timespec_t   ts;
+    ns_tm_t      tm;
 
     clock_gettime(CLOCK_REALTIME, &ts);
     set_safe_duration();
@@ -253,10 +252,10 @@ mi_datetime* realtime_dt_slow(MI_FPARAM* fParam) {
     Use this if you have trouble with the nomal versions
 
 */
-mi_datetime* utc_realtime_dt_slow(MI_FPARAM* fParam) {
-    mi_datetime* ret;
-    timespec_t ts;
-    ns_tm_t tm;
+mi_datetime *utc_realtime_dt_slow(MI_FPARAM *fParam) {
+    mi_datetime *ret;
+    timespec_t   ts;
+    ns_tm_t      tm;
 
     clock_gettime(CLOCK_REALTIME, &ts);
     set_safe_duration();
@@ -278,14 +277,14 @@ mi_datetime* utc_realtime_dt_slow(MI_FPARAM* fParam) {
 
     Same as above, but using only standard informix/system library functions.
 
-    So far as I can tell, in glibc at list, strftime does no internal allocations, so
-    should be safe. ( don't use strftime_l though it might )
+    So far as I can tell, in glibc at list, strftime does no internal
+   allocations, so should be safe. ( don't use strftime_l though it might )
 
 */
 
-inline void ns_tm_to_datetime_slow(const ns_tm_t* tm, mi_datetime* dt) {
-    mi_datetime* dt_tmp;
-    char buf[DATE_STR_BUFSZ];
+inline void ns_tm_to_datetime_slow(const ns_tm_t *tm, mi_datetime *dt) {
+    mi_datetime *dt_tmp;
+    char         buf[DATE_STR_BUFSZ];
 
     strftime(buf, DATE_STR_BUFSZ, "%Y-%m-%d %H:%M:%S", &tm->tm);
 

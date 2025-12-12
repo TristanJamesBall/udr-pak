@@ -8,30 +8,17 @@ EXTERNAL NAME '$INFORMIXDIR/extend/udr-pak/udr-pak.so()'
 LANGUAGE C;
 
 
-CREATE PROCEDURE IF NOT EXISTS udr_trace_set( lvl smallint ) 
-EXTERNAL NAME '$INFORMIXDIR/extend/udr-pak/udr-pak.so()'
-LANGUAGE C;
-
-CREATE PROCEDURE IF NOT EXISTS udr_trace_on( ) 
-EXTERNAL NAME '$INFORMIXDIR/extend/udr-pak/udr-pak.so()'
-LANGUAGE C;
-
-
-
-CREATE PROCEDURE IF NOT EXISTS udr_trace_off()
-EXTERNAL NAME '$INFORMIXDIR/extend/udr-pak/udr-pak.so()'
-LANGUAGE C;
-
-CREATE PROCEDURE IF NOT EXISTS udr_trace_test()
-EXTERNAL NAME '$INFORMIXDIR/extend/udr-pak/udr-pak.so()'
-LANGUAGE C;
+CREATE PROCEDURE IF NOT EXISTS udr_trace_set( lvl smallint ) EXTERNAL NAME '$INFORMIXDIR/extend/udr-pak/udr-pak.so()' LANGUAGE C;
+CREATE PROCEDURE IF NOT EXISTS udr_trace_on( ) EXTERNAL NAME '$INFORMIXDIR/extend/udr-pak/udr-pak.so()' LANGUAGE C;
+CREATE PROCEDURE IF NOT EXISTS udr_trace_off() EXTERNAL NAME '$INFORMIXDIR/extend/udr-pak/udr-pak.so()' LANGUAGE C;
+CREATE PROCEDURE IF NOT EXISTS udr_trace_test() EXTERNAL NAME '$INFORMIXDIR/extend/udr-pak/udr-pak.so()' LANGUAGE C;
 
 
 
 { Not allowed to merge into systraceclasses!! }
 
 insert into systraceclasses(name)
-select name from table(list{'udrpak','udrpak_mem'}) as ins(name)
+select name from table(list{'udrpak'}) as ins(name)
 where not exists ( select 1 from systraceclasses where name = ins.name) ;
 
 

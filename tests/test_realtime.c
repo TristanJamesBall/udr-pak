@@ -8,9 +8,9 @@
 #include "../realtime/realtime.h"
 
 int main(void) {
-    uint64_t a, b;
+    uint64_t        a, b;
     struct timespec ts;
-    ns_tm_t tm;
+    ns_tm_t         tm;
 
     /* Basic non-zero checks */
     a = get_clocktick_ns(CLOCK_REALTIME);
@@ -23,7 +23,7 @@ int main(void) {
     assert(b >= a && "get_monotonic_ns moved backwards");
 
     /* timespec -> ns_tm conversion (UTC) */
-    ts.tv_sec = 1609459200; /* 2021-01-01 00:00:00 UTC */
+    ts.tv_sec  = 1609459200; /* 2021-01-01 00:00:00 UTC */
     ts.tv_nsec = 123456789;
     timespec_to_ns_tm(&ts, &tm, GMT_TZ);
     /* gmtime_r yields year since 1900 */

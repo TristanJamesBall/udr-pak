@@ -13,8 +13,14 @@ CFLAGS_CLIENT = -UMI_SERVBUILD -DMITRACE_OFF
 LDFLAGS = -shared -u _etext 
 
 
-TEST_CFLAGS = -Wall -Og -std=gnu23 -D_GNU_SOURCE
-TEST_LDFLAGS = -lrt -lm 
+
+
+TEST_OPTS =  -Wall -Og -std=gnu23 -D_GNU_SOURCE -UMI_SERVBUILD 
+TEST_PATHS = -I${INFORMIXSDK}/incl -L$(INFORMIXSDK)/lib/esql -L$(INFORMIXSDK)/lib/dmi -L$(INFORMIXSDK)/lib 
+TEST_LIBS = -lthdmi15a -lthgen15a -lixgls -lthos15a
+TEST_CFLAGS = $(TEST_OPTS) $(TEST_PATHS) $(TEST_LIBS)
+
+#-lifgls -ltdmi15a -lifgen15a -ltsql15a
 
 LD ?= $(CC)
 
@@ -122,12 +128,15 @@ TEST_BIN_DIR = build/bin
 .PHONY: test
 test: $(TEST_BIN_DIR) $(TEST_BIN_DIR)/test_realtime
 	@if [ -f $(TEST_BIN_DIR)/test_realtime ]; then echo "Running realtime tests..."; $(TEST_BIN_DIR)/test_realtime; else echo "Skipping test (SDK unavailable)"; fi
+	$(RM) build/bin/test_realtime
 
 $(TEST_BIN_DIR):
 	${MKDIR} $(TEST_BIN_DIR)
 
 $(TEST_BIN_DIR)/test_realtime: tests/test_realtime.c realtime/realtime.c
-	@$(CC) -Wall -O2 -std=gnu23 -I${INFORMIXSDK}/incl -D_GNU_SOURCE -DMI_SERVBUILD -I. $^ -o $@ -lrt -lm 2>/dev/null || { echo "WARNING: test_realtime requires full Informix SDK; skipping build"; }
+	@$(CC) $(TEST_CFLAGS) -I. $^ -o $@ 
+
+# 2>/dev/null || { echo "WARNING: test_realtime requires full Informix SDK; skipping build"; }
 
 .PHONY: integration-test
 integration-test:

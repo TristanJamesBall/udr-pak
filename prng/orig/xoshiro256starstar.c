@@ -29,9 +29,7 @@ IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE. */
    a 64-bit seed, we suggest to seed a splitmix64 generator and use its
    output to fill s. */
 
-static inline uint64_t rotl(const uint64_t x, int k) {
-    return (x << k) | (x >> (64 - k));
-}
+static inline uint64_t rotl(const uint64_t x, int k) { return (x << k) | (x >> (64 - k)); }
 
 static uint64_t s[4];
 
@@ -57,8 +55,7 @@ uint64_t next(void) {
    non-overlapping subsequences for parallel computations. */
 
 void jump(void) {
-    static const uint64_t JUMP[] = {0x180ec6d33cfd0aba, 0xd5a61266f0c9392c, 0xa9582618e03fc9aa,
-                                    0x39abdc4529b1661c};
+    static const uint64_t JUMP[] = {0x180ec6d33cfd0aba, 0xd5a61266f0c9392c, 0xa9582618e03fc9aa, 0x39abdc4529b1661c};
 
     uint64_t s0 = 0;
     uint64_t s1 = 0;
@@ -87,8 +84,7 @@ void jump(void) {
    subsequences for parallel distributed computations. */
 
 void long_jump(void) {
-    static const uint64_t LONG_JUMP[] = {0x76e15d3efefdcbbf, 0xc5004e441c522fb3, 0x77710069854ee241,
-                                         0x39109bb02acbe635};
+    static const uint64_t LONG_JUMP[] = {0x76e15d3efefdcbbf, 0xc5004e441c522fb3, 0x77710069854ee241, 0x39109bb02acbe635};
 
     uint64_t s0 = 0;
     uint64_t s1 = 0;

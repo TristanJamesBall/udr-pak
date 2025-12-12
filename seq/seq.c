@@ -10,7 +10,7 @@ typedef struct {
     mi_integer now;
     mi_integer step;
     mi_integer end;
-    seq_order order;
+    seq_order  order;
 } int_seq_t;
 
 #define PMAP_000 0
@@ -22,9 +22,9 @@ typedef struct {
 #define PMAP_110 6
 #define PMAP_111 7
 
-mi_integer seq_int_init(mi_integer p1, mi_integer p2, mi_integer p3, MI_FPARAM* fParam) {
-    int_seq_t* seq_state = NULL;
-    uint8_t p_map = 0;
+mi_integer seq_int_init(mi_integer p1, mi_integer p2, mi_integer p3, MI_FPARAM *fParam) {
+    int_seq_t *seq_state = NULL;
+    uint8_t    p_map     = 0;
 
     p_map |= notArgNull(fParam, 0) << 2;
     p_map |= notArgNull(fParam, 1) << 1;
@@ -34,7 +34,7 @@ mi_integer seq_int_init(mi_integer p1, mi_integer p2, mi_integer p3, MI_FPARAM* 
         return (-1);
     }
 
-    seq_state = (int_seq_t*)get_func_state_ptr(sizeof(int_seq_t), fParam);
+    seq_state = (int_seq_t *)get_func_state_ptr(sizeof(int_seq_t), fParam);
 
     /* our 3 parameters aren't really positional, although the way informix works
        parameters are either named or positional.
@@ -53,51 +53,51 @@ mi_integer seq_int_init(mi_integer p1, mi_integer p2, mi_integer p3, MI_FPARAM* 
         p2 is null
     */
     switch (p_map) {
-        case PMAP_001:
-            seq_state->now = 0;
-            seq_state->start = 0;
-            seq_state->step = (p3 > 0) ? 1 : -1;
-            ;
-            seq_state->end = p3;
-            break;
-        case PMAP_010:
-            // Should probably be an error?
-            seq_state->now = 0;
-            seq_state->start = 0;
-            seq_state->step = (p2 > 0) ? 1 : -1;
-            ;
-            seq_state->end = p2;
-            break;
-        case PMAP_100:
-            seq_state->now = 0;
-            seq_state->start = 0;
-            seq_state->step = (p1 > 0) ? 1 : -1;
-            seq_state->end = p1;
-            break;
-        case PMAP_101:
-            seq_state->now = p1;
-            seq_state->start = p1;
-            seq_state->step = (p3 > p1) ? 1 : -1;
-            seq_state->end = p3;
-            break;
-        case PMAP_110:
-            seq_state->now = p1;
-            seq_state->start = p1;
-            seq_state->step = (p2 > p1) ? 1 : -1;
-            seq_state->end = p2;
-            break;
-        case PMAP_011:
-            seq_state->now = p2;
-            seq_state->start = p2;
-            seq_state->step = (p3 > p2) ? 1 : -1;
-            seq_state->end = p3;
-            break;
-        case PMAP_111:
-            seq_state->now = p1;
-            seq_state->start = p1;
-            seq_state->step = p2;
-            seq_state->end = p3;
-            break;
+    case PMAP_001:
+        seq_state->now   = 0;
+        seq_state->start = 0;
+        seq_state->step  = (p3 > 0) ? 1 : -1;
+        ;
+        seq_state->end = p3;
+        break;
+    case PMAP_010:
+        // Should probably be an error?
+        seq_state->now   = 0;
+        seq_state->start = 0;
+        seq_state->step  = (p2 > 0) ? 1 : -1;
+        ;
+        seq_state->end = p2;
+        break;
+    case PMAP_100:
+        seq_state->now   = 0;
+        seq_state->start = 0;
+        seq_state->step  = (p1 > 0) ? 1 : -1;
+        seq_state->end   = p1;
+        break;
+    case PMAP_101:
+        seq_state->now   = p1;
+        seq_state->start = p1;
+        seq_state->step  = (p3 > p1) ? 1 : -1;
+        seq_state->end   = p3;
+        break;
+    case PMAP_110:
+        seq_state->now   = p1;
+        seq_state->start = p1;
+        seq_state->step  = (p2 > p1) ? 1 : -1;
+        seq_state->end   = p2;
+        break;
+    case PMAP_011:
+        seq_state->now   = p2;
+        seq_state->start = p2;
+        seq_state->step  = (p3 > p2) ? 1 : -1;
+        seq_state->end   = p3;
+        break;
+    case PMAP_111:
+        seq_state->now   = p1;
+        seq_state->start = p1;
+        seq_state->step  = p2;
+        seq_state->end   = p3;
+        break;
     }
     if (seq_state->step == 0 || seq_state->start == seq_state->end) {
         return (-1);
@@ -118,50 +118,52 @@ mi_integer seq_int_init(mi_integer p1, mi_integer p2, mi_integer p3, MI_FPARAM* 
  *    SET_RETONE : Compute the next number in the series.
  *    SET_END : Free the user-allocated user-state structure.
  */
-mi_integer seq_int(mi_integer p1, mi_integer p2, mi_integer p3, MI_FPARAM* fParam) {
-    int_seq_t* seq_state = NULL;
-    mi_integer ret = -1;
+mi_integer seq_int(mi_integer p1, mi_integer p2, mi_integer p3, MI_FPARAM *fParam) {
+    int_seq_t *seq_state = NULL;
+    mi_integer ret       = -1;
 
     set_safe_duration();
 
     switch (mi_fp_request(fParam)) {
-        case SET_RETONE:
 
-            /*
-                this is critical, otherwise the sequence will continue to run
-                past "first n" limites or ctrl-c cancels ( although the additional data is thrown
-               away)
-            */
-            if (mi_interrupt_check() != 0) {
-                mi_fp_setisdone(fParam, 1);
-                return_SQLnull(0);
-                break;
-            }
+    case SET_INIT:
+        trace(1, "Entry");
+        if (seq_int_init(p1, p2, p3, fParam) < 0) {
+            mi_fp_setisdone(fParam, 1);
+            return_SQLnull(0);
+        }
+        break;
 
-            seq_state = (int_seq_t*)get_func_state_ptr(sizeof(int_seq_t), fParam);
+    case SET_RETONE:
 
-            ret = seq_state->now;
-
-            if (seq_state->step > 0 && seq_state->now > seq_state->end) {
-                mi_fp_setisdone(fParam, 1);
-            } else if (seq_state->step < 0 && seq_state->now < seq_state->end) {
-                mi_fp_setisdone(fParam, 1);
-            } else {
-                seq_state->now += seq_state->step;
-            }
+        /*
+            this is critical, otherwise the sequence will continue to run
+            past "first n" limites or ctrl-c cancels ( although the additional data
+           is thrown away)
+        */
+        if (mi_interrupt_check() != 0) {
+            mi_fp_setisdone(fParam, 1);
+            return_SQLnull(0);
             break;
+        }
 
-        case SET_INIT:
-            if (seq_int_init(p1, p2, p3, fParam) < 0) {
-                mi_fp_setisdone(fParam, 1);
-                return_SQLnull(0);
-            }
-            break;
+        seq_state = (int_seq_t *)get_func_state_ptr(sizeof(int_seq_t), fParam);
 
-        case SET_INVALID:
-        case SET_END:
+        ret = seq_state->now;
 
-            break;
+        if (seq_state->step > 0 && seq_state->now > seq_state->end) {
+            mi_fp_setisdone(fParam, 1);
+        } else if (seq_state->step < 0 && seq_state->now < seq_state->end) {
+            mi_fp_setisdone(fParam, 1);
+        } else {
+            seq_state->now += seq_state->step;
+        }
+        break;
+
+    case SET_INVALID:
+    case SET_END:
+
+        break;
     }
     return (ret);
 }
