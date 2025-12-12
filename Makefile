@@ -31,7 +31,7 @@ RMDIR = rmdir
 TARGET = udr-pak
 
 # Source and object directories
-SRCDIRS = tracing runtime seq prng uuid realtime
+SRCDIRS = tracing runtime util prng uuid realtime
 OBJDIR = build/obj
 CLIENT_OBJDIR = build/client_obj
 LIBDIR = build/lib
@@ -77,7 +77,7 @@ $(OBJDIR)/%.o: runtime/%.c
 $(OBJDIR)/%.o: realtime/%.c
 	$(CC) $(CFLAGS) $(CFLAGS_UDR) -c $< -o $@
 
-$(OBJDIR)/%.o: seq/%.c
+$(OBJDIR)/%.o: util/%.c
 	$(CC) $(CFLAGS) $(CFLAGS_UDR) -c $< -o $@
 
 $(OBJDIR)/%.o: prng/%.c
@@ -100,7 +100,7 @@ $(CLIENT_OBJDIR)/%.o: runtime/%.c
 $(CLIENT_OBJDIR)/%.o: realtime/%.c
 	$(CC) $(CFLAGS) $(CFLAGS_CLIENT) -c $< -o $@
 
-$(CLIENT_OBJDIR)/%.o: seq/%.c
+$(CLIENT_OBJDIR)/%.o: util/%.c
 	$(CC) $(CFLAGS) $(CFLAGS_CLIENT) -c $< -o $@
 
 $(CLIENT_OBJDIR)/%.o: prng/%.c

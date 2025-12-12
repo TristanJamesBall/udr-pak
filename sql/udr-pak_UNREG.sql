@@ -26,14 +26,10 @@ DROP FUNCTION IF EXISTS fast_utc_realtime_dt2;
 
 delete from systraceclasses
 where name in (
-select name from systraceclasses where name like 'udr%'
+    select name from systraceclasses where name like 'udr%'
 );
 
 
-delete from systraceclasses
-where name in (
-select name from table(list{'udr_entry','udr_state','udr_mem','udr_state','udr_dbg'}) as ins(name)
-);
 DROP FUNCTION IF EXISTS udr_fn;
 DROP PROCEDURE IF EXISTS udr_fn;
 
