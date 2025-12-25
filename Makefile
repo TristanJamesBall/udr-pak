@@ -1,162 +1,169 @@
-
-default : all
-DBNAME = tjb
-RUNAS = sudo -u informix
-INFORMIXSDK := $(shell realpath informix-sdk)
-INFORMIXDIR := $(shell realpath informix-server)
-
-# Compiler and flags
-CC = gcc
-CFLAGS = -Wall -O3 -std=gnu23 -fPIC -shared -I${INFORMIXSDK}/incl -D_GNU_SOURCE 
-CFLAGS_UDR = -DMI_SERVBUILD
-CFLAGS_CLIENT = -UMI_SERVBUILD -DMITRACE_OFF
-LDFLAGS = -shared -u _etext 
-
-
-
-
-TEST_OPTS =  -Wall -Og -std=gnu23 -D_GNU_SOURCE -UMI_SERVBUILD 
-TEST_PATHS = -I${INFORMIXSDK}/incl -L$(INFORMIXSDK)/lib/esql -L$(INFORMIXSDK)/lib/dmi -L$(INFORMIXSDK)/lib 
-TEST_LIBS = -lthdmi15a -lthgen15a -lixgls -lthos15a
-TEST_CFLAGS = $(TEST_OPTS) $(TEST_PATHS) $(TEST_LIBS)
-
-#-lifgls -ltdmi15a -lifgen15a -ltsql15a
-
-LD ?= $(CC)
-
-MKDIR = mkdir -p
-RM = rm -f
-RMDIR = rmdir
-# Project name and target executable
+# Makefile for udr-pak shared library
+# Compiles all C code under ./src into build/lib/udr-pak.so
 TARGET = udr-pak
 
-# Source and object directories
-SRCDIRS = tracing runtime util prng uuid realtime
-OBJDIR = build/obj
-CLIENT_OBJDIR = build/client_obj
-LIBDIR = build/lib
-
-# Find all C source files in subdirectories
-SOURCES = $(foreach dir,$(SRCDIRS),$(wildcard $(dir)/*.c))
-
-# Create object file names based on source files
-OBJECTS = $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
-
-# Create object file names based on source files
-CLIENT_OBJECTS = $(patsubst %.c,$(CLIENT_OBJDIR)/%.o,$(notdir $(SOURCES)))
-
-.PHONY: all clean format
+# Default target
+.PHONY: all clean install
+default : all
+all: build/lib/$(TARGET).so
 
 
-all: $(LIBDIR) $(OBJDIR) $(CLIENT_OBJDIR) $(TARGET)
+export DBNAME := ci_test
+RUNAS = sudo -u informix
 
-$(LIBDIR):
-	mkdir -p $(LIBDIR)
+#Tools
+CC ?= gcc
+LD ?= $(CC)
 
-$(OBJDIR):
-	mkdir -p $(OBJDIR)
 
-$(CLIENT_OBJDIR):
-	mkdir -p $(CLIENT_OBJDIR)
+# ./informix-[sdk|server] are symlinks to the install dirs
+# eg $( realpath informix-sdk ) resolves to /opt/ifx.sdk.15.0.0.2
+# You don't have to do it this way, just normal -I flags is OK,
+# it's and experiment in easilly giving AI more context
+INFORMIXSDK := $(shell realpath informix-sdk)
+
+DESTDIR := ${INFORMIXDIR}/extend/${TARGET}
 
 
 
-$(TARGET): $(OBJECTS) $(CLIENT_OBJECTS)
-	$(LD) $(LDFLAGS) $(OBJECTS) -o $(LIBDIR)/$(TARGET).so $(LDLIBS)
-	$(LD) $(LDFLAGS) $(CLIENT_OBJECTS) -o $(LIBDIR)/$(TARGET)_client.so $(LDLIBS)
+# Source directories
+SRCDIRS := src/util src/prng src/realtime src/uuid src/any
+SOURCES := $(shell find $(SRCDIRS) -maxdepth 1 -name "*.c" -type f | sort)
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.c
-	$(CC) $(CFLAGS) $(CFLAGS_UDR) -c $< -o $@
+# Object files output directory
+OBJDIR := build/obj
 
-$(OBJDIR)/%.o: tracing/%.c
-	$(CC) $(CFLAGS) $(CFLAGS_UDR) -c $< -o $@
-
-$(OBJDIR)/%.o: runtime/%.c
-	$(CC) $(CFLAGS) $(CFLAGS_UDR) -c $< -o $@
-
-$(OBJDIR)/%.o: realtime/%.c
-	$(CC) $(CFLAGS) $(CFLAGS_UDR) -c $< -o $@
-
-$(OBJDIR)/%.o: util/%.c
-	$(CC) $(CFLAGS) $(CFLAGS_UDR) -c $< -o $@
-
-$(OBJDIR)/%.o: prng/%.c
-	$(CC) $(CFLAGS) $(CFLAGS_UDR) -c $< -o $@
-
-$(OBJDIR)/%.o: uuid/%.c
-	$(CC) $(CFLAGS) $(CFLAGS_UDR) -c $< -o $@
+# Library output
+LIBDIR := build/lib
+LIBOUT := $(LIBDIR)/udr-pak.so
 
 
+# On my fedora/glibc system, _XOPEN_SOURCE=600 seems to be the minimum can go 
+# and still get our CLOCK_* defines
+#
+# If you're on any remotely modern linux system, you can just set _GNU_SOURCE:
+#
+# CFLAGS := -std=c11  -D_XOPEN_SOURCE=600 -fPIC -Wall  -g -O3  -DMI_SERVBUILD 
+#
 
-$(CLIENT_OBJDIR)/%.o: $(SRCDIR)/%.c
-	$(CC) $(CFLAGS) $(CFLAGS_CLIENT) -c $< -o $@
+REQ_CFLAGS := -std=c11 -fPIC -shared -D_GNU_SOURCE  -DMI_SERVBUILD 
+DBG_CFLAGS := -Wall -g -Winline
+REL_CFLAGS := -Wall 
+OPT_CFLAGS :=
+#-coverage -ftest-coverage
+CFLAGS := $(REQ_CFLAGS) $(DBG_CFLAGS) $(OPT_CFLAGS)
+#CFLAGS := $(REQ_CFLAGS) $(REL_CFLAGS) $(OPT_CFLAGS)
+CPPFLAGS := -Isrc/util -Isrc/prng -Isrc/realtime -Isrc/uuid -Isrc/any
+LDFLAGS += -shared 
 
-$(CLIENT_OBJDIR)/%.o: tracing/%.c
-	$(CC) $(CFLAGS) $(CFLAGS_CLIENT) -c $< -o $@
-
-$(CLIENT_OBJDIR)/%.o: runtime/%.c
-	$(CC) $(CFLAGS) $(CFLAGS_CLIENT) -c $< -o $@
-
-$(CLIENT_OBJDIR)/%.o: realtime/%.c
-	$(CC) $(CFLAGS) $(CFLAGS_CLIENT) -c $< -o $@
-
-$(CLIENT_OBJDIR)/%.o: util/%.c
-	$(CC) $(CFLAGS) $(CFLAGS_CLIENT) -c $< -o $@
-
-$(CLIENT_OBJDIR)/%.o: prng/%.c
-	$(CC) $(CFLAGS) $(CFLAGS_CLIENT) -c $< -o $@
-
-$(CLIENT_OBJDIR)/%.o: uuid/%.c
-	$(CC) $(CFLAGS) $(CFLAGS_CLIENT) -c $< -o $@
+SDKDIR ?= ./informix-sdk
+ifdef SDKDIR
+    CPPFLAGS += -I$(SDKDIR)/incl
+    LDFLAGS += -L$(SDKDIR)/lib
+endif
 
 
 
+# Generate object file names from sources
+OBJECTS := $(foreach src,$(SOURCES),$(OBJDIR)/$(notdir $(basename $(src))).o)
 
+# Create directories if they don't exist
+$(OBJDIR) $(LIBDIR):
+	mkdir -p $@
+
+# Compile C source files to object files
+$(OBJDIR)/%.o: src/util/%.c | $(OBJDIR)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/%.o: src/any/%.c | $(OBJDIR)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/%.o: src/prng/%.c | $(OBJDIR)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/%.o: src/realtime/%.c | $(OBJDIR)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/%.o: src/uuid/%.c | $(OBJDIR)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+# Link object files into shared library
+$(LIBOUT): $(OBJECTS) | $(LIBDIR)
+	$(LD) $(LDFLAGS) $(OBJECTS) -o $@
+
+# Install target (requires Informix environment)
+.PHONY: Install
+
+NOW := $(shell date  "+%Y%m%d__%H%M%S" )
+UDR_SO := $(DESTDIR)/$(TARGET).so
+BACKUP_SO := $(UDR_SO).$(NOW)
+
+
+install: $(LIBOUT)
+	@if [ -z "$(INFORMIXDIR)" ]; then         \
+		echo "Error: INFORMIXDIR not set"    ;\
+		exit                                 ;\
+	fi
+	@${RUNAS} mkdir -p $(DESTDIR)
+	@${RUNAS} chmod 775 $(DESTDIR)
+# Copy in as a .new file first, if this fails, there's no point going further
+	@${RUNAS} cp -f ./build/lib/${TARGET}.so $(UDR_SO).new
+
+	@if [ -f $(UDR_SO) ]; then      \
+		printf "\n NOTICE: Existing library backed up to: \n\t$(BACKUP_SO)\n\n"     ;\
+	 	$(RUNAS) mv $(UDR_SO)    $(BACKUP_SO)                                     ;\
+	fi
+	@if [ -f $(UDR_SO) ]; then      \
+		printf "Failed to backup pre-existing library, can't continue\n"         ;\
+		exit 1                                                                   ;\
+	fi
+	@$(RUNAS) mv     $(UDR_SO).new      $(UDR_SO)
+	@${RUNAS} cp -f ./src/sql/*.sql     $(DESTDIR)
+	@printf "Registering procedures with Informix\n\n"
+	${RUNAS} dbaccess -e -a ${DBNAME} ./src/sql/${TARGET}_REG.sql 
+
+	@printf "\nInstall summary\n\n"
+	@${RUNAS} ./scripts/show_install.sh
+	@echo
+	@tree -n -f --matchdirs -P "$(TARGET)" -P "*.sql" -P "*.so" --prune $(DESTDIR) || find $(DESTDIR) -name "*.so" -o -name ".sql" -ls || true
+
+
+
+
+
+uninstall: 
+	$(RUNAS) ./scripts/create_drop_routines.sh $(DBNAME) $(TARGET) | $(RUNAS) dbaccess -e ${DBNAME} 2>&1 
+	${RUNAS} dbaccess -e ${DBNAME} ./src/sql/${TARGET}_UNREG.sql 2>&1 
+	${RUNAS} ${RM} 	$(DESTDIR)/*.{so,sql}
+	@echo "The following command may fail"
+	${RUNAS} rmdir 	${DESTDIR} || true
+
+# Clean build artifacts
 clean:
-	${RM} $(OBJECTS) $(LIBDIR)/$(TARGET).so 
+	rm -rf $(OBJDIR) $(LIBDIR) dbaccess.install.log
+	@echo "Cleaned build artifacts"
 
 
-.PHONY: format
+.PHONY: format 
 format:
 	@command -v clang-format >/dev/null 2>&1 || { echo "clang-format not found; install clang-format to run this target"; exit 1; }
 	@echo "Formatting C sources with clang-format..."
 	@find . -name '*.c' -o -name '*.h' | xargs clang-format -i || true
 
 
-TEST_BIN_DIR = build/bin
+# Show build variables
+.PHONY: info
+info:
+	@echo
+	@printf "%-20s: %s\n"  "DESTDIR" "$(DESTDIR)"
+	@printf "%-20s: %s\n"  "INFORMIXSERVER" "${INFORMIXSERVER}"
+	@printf "%-20s: %s\n"  "INFORMIXDIR" "${INFORMIXDIR}"
+	@printf "%-20s: %s\n"  "DBNAME" "${DBNAME}"
+	@printf "%-20s: %s\n"  "Sources" "$(SOURCES)"
+	@printf "%-20s: %s\n"  "Objects" "$(OBJECTS)"
+	@printf "%-20s: %s\n"  "Library" "$(LIBOUT)"
+	@printf "%-20s: %s\n"  "CFLAGS" "$(CFLAGS)"
+	@printf "%-20s: %s\n"  "CPPFLAGS" "$(CPPFLAGS)"
+	@printf "%-20s: %s\n"  "LDFLAGS" "$(LDFLAGS)"
+	@echo
 
-.PHONY: test
-test: $(TEST_BIN_DIR) $(TEST_BIN_DIR)/test_realtime
-	@if [ -f $(TEST_BIN_DIR)/test_realtime ]; then echo "Running realtime tests..."; $(TEST_BIN_DIR)/test_realtime; else echo "Skipping test (SDK unavailable)"; fi
-	$(RM) build/bin/test_realtime
-
-$(TEST_BIN_DIR):
-	${MKDIR} $(TEST_BIN_DIR)
-
-$(TEST_BIN_DIR)/test_realtime: tests/test_realtime.c realtime/realtime.c
-	@$(CC) $(TEST_CFLAGS) -I. $^ -o $@ 
-
-# 2>/dev/null || { echo "WARNING: test_realtime requires full Informix SDK; skipping build"; }
-
-.PHONY: integration-test
-integration-test:
-	@echo "Running integration tests (build, install, SQL checks)"
-	@./tests/integration/run_informix_tests.sh
-
-
-## It's really important that we don't overwrite the shared library informix is currently using.
-## Even if we overwrite it "perfectly" (identical file, same inode, matching sha256 ) - informix will crash
-## Moving the file and recreating new one is OK tho
-install: all
-	${RUNAS} ${MKDIR} ${INFORMIXDIR}/extend/${TARGET}
-	${RUNAS} chmod 775 ${INFORMIXDIR}/extend/${TARGET}
-	$(RUNAS) /bin/sh -c 'F=${INFORMIXDIR}/extend/${TARGET}/${TARGET}.so; if [ -e "$$F" ]; then mv "$$F" "$$F".bak.$$(date +%s); fi '
-	${RUNAS} cp -f ./build/lib/${TARGET}.so      ${INFORMIXDIR}/extend/${TARGET}
-	${RUNAS} cp -f ./sql/${TARGET}*REG.sql  ${INFORMIXDIR}/extend/${TARGET}
-	${RUNAS} dbaccess -a ${DBNAME} ./sql/${TARGET}_REG.sql 2>&1 | awk 'NF>0'
-	${RUNAS} ./extra/show_install.sh
-
-uninstall: 
-	${RUNAS} dbaccess -e ${DBNAME} ./sql/${TARGET}_UNREG.sql 2>&1 | awk 'NF>0'
-	${RUNAS} ${RM} ${INFORMIXDIR}/extend/${TARGET}/*
-	${RUNAS} rmdir ${INFORMIXDIR}/extend/${TARGET}

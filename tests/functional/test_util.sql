@@ -8,6 +8,7 @@ create temp table results (
     result  lvarchar(32),
     status  lvarchar(6)
     );
+insert into results values('test_name','expected','result','status');
 
 insert into results
 SELECT
@@ -154,25 +155,5 @@ FROM (
             )
     );
 
-insert into results
-SELECT
-    test_name,
-    expected,
-    result,
-    CASE
-        WHEN expected == result THEN 'PASS'
-        ELSE 'FAIL'
-    END AS STATUS
-FROM (
-        SELECT
-            'to_hex() performance (10k)' test_name,
-            10000 AS expected,
-            COUNT(*) AS result
-        FROM (
-                SELECT
-                    to_hex(val) AS hex_val
-                FROM TABLE(seq(10000)) AS t(val)
-            )
-    );
-
+unload to '../results/results.txt'
 select * from results;

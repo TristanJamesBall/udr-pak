@@ -16,4 +16,4 @@ dev/**
 incl/**
 informix-*/**
 informix-*
-tests/*/**
+tests/server/**

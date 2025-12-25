@@ -1,12 +1,7 @@
 #!/bin/bash
 
-# Yes, this only works on my machine
-case $(uname -n) in
-	gram2) INFORMIXSERVER=${INFORMIXSERVER}_shm ;;
-esac
-
 export TIMEFORMAT="Elapsed: %3R"
-DBNAME=tjb
+DBNAME=${DBNAME:-${DB:-tjb}}
 FIFO="./.timing.fifo.$$"
 TAB=$'\t'
 OFS="$IFS"
@@ -21,32 +16,47 @@ typeset -A meta
 
 main() {
 
+	meta=( [h1]="" [h2]="Java UUIDv4 (IBM packeged java.util.uuuid)" [short_name]="uuid()" )
+	projection_clauses=( "uuid() as prng" )
+	bench_runner 10000000 5
+exit
+
+	meta=( [h1]="" [h2]="Realtime timestamps, Year to fraction(5) format, local timezone" [short_name]="realtime_dt()" )
+	projection_clauses=( "realtime_dt() as realtime" )
+	bench_runner 1000000 5
+
+
 	meta=( [h1]="" [h2]="PRNG with Txn Level Auto Re-Seed" [short_name]="prng()" )
 	projection_clauses=( "prng() as prng" )
-	bench_runner 5000000 5
+	bench_runner 1000000 5
 
 
+	meta=( [h1]="" [h2]="UUIDv4 with Random" [short_name]="uuid4()" )
+	projection_clauses=( "uuidv4() as prng" )
+	bench_runner 1000000 5
+	
+	
 	meta=( [h1]="" [h2]="UUIDv7 with Millisec timestamp and PRNG above" [short_name]="uuid7()" )
 	projection_clauses=( "uuidv7() as prng" )
-	bench_runner 5000000 5
+	bench_runner 1000000 5
 	
 
 	meta=( [h1]="" [h2]="Realtime timestamps, Year to fraction(5) format, local timezone" [short_name]="realtime_dt()" )
 	projection_clauses=( "realtime_dt() as realtime" )
-	bench_runner 5000000 5
+	bench_runner 1000000 5
 
 	meta=( [h1]="" [h2]="Realtime timestamps, Unix time as a Decimal(32,9), nanosecond resolution" [short_name]="clocktick_s()" )
 	projection_clauses=( "clocktick_s() as seconds" )
-	bench_runner 5000000 5
+	bench_runner 1000000 5
 
 	
 	meta=( [h1]="" [h2]="Realtime timestamps, Unix time as a Decimal(32) nanosecond resolution" [short_name]="clocktick_ns()" )
 	projection_clauses=( "clocktick_ns() as nanoseconds" )
-	bench_runner 5000000 5
+	bench_runner 1000000 5
 
 	meta=( [h1]="" [h2]="Realtime timestamps, Unix time as a Bigint microsecond resolution" [short_name]="clocktick_us()" )
 	projection_clauses=( "clocktick_us() as microseconds" )
-	bench_runner 5000000 5
+	bench_runner 1000000 5
 }
 
 
@@ -102,16 +112,8 @@ bench_runner() {
 		seq_lines=${tgt_line_count}
 	fi
 
-#	echo "Wanted : $tgt_line_count"
-#	echo "Fetching $(( seq_lines**xjoins ))"
 	rm -f $FIFO
 	mkfifo $FIFO
-
-#	if [[ -n "${h1_text+h1_set}" ]]; then
-
-#		h1_line "$h1_text"
-	
-#	fi
 
 	if [[ -n "${h2_text+h2_set}" ]]; then
 
@@ -127,48 +129,49 @@ bench_runner() {
 		done 
 	}
 
-		label="$( printf "%-35.35s" "${short_name} ${res_pad_str}" )"
-		pv "$label" < $FIFO  &
-		pv_pid=$?
+	label="$( printf "%-35.35s" "${short_name} rate ${res_pad_str}" )"
+	pv "$label" < $FIFO  &
+	pv_pid=$?
 
-		#dbaccess $DBNAME 2>/dev/null  <<-EOF
+	#dbaccess $DBNAME 2>/dev/null  <<-EOF
 
-		
-		label="$( printf "%-35.35s" "${short_name} example ${res_pad_str}" )"
-
-		run_example() {
-			# this stdout trick is brittle, it doesn't work under ksh, and it might not work
-			# if you're not the owner pf your PTY (eg, because of su/sudo )
-			dbaccess $DBNAME 2>/dev/null <<< "unload to '/dev/stdout' delimiter '$DL' select $( proj_clause ) from sysmaster:sysdual;" 
-		}
-
-		IFS="$DL" 
-		printf "$label:- %s\n" $( run_example ) 
-		IFS="$OFS"
 	
-		{ tee ./prng_bench_run.sql | dbaccess $DBNAME 2>/dev/null ;} <<-EOF
+	label="$( printf "%-35.35s" "${short_name} example ${res_pad_str}" )"
 
-			unload to '$FIFO'
-			select 
-				limit ${tgt_line_count:-100000}
-				$( 
-					sep=""; 
-					for prj in "${projection_clauses[@]}" ; do 
-						printf "%s%s\n" "$sep" "$prj"; 
-						sep=","
-					done 
-				)
-			from	
-							table(seq(1,1,${seq_lines}))
-				$( 
-					# carefull here, this is x=1 and '<' not '<='
-					# delberately so we don't get waaaaay to many xjones
-					# 1 to many is waaaaay
-					for (( x=1; x < xjoins; x++ )); do 
-						printf "cross join table(seq(1,1,%d))\n" "$seq_lines"; 
-					done 
-				)
-			;
+	run_example() {
+		# this stdout trick is brittle, it doesn't work under ksh, and it might not work
+		# if you're not the owner pf your PTY (eg, because of su/sudo )
+		#dbaccess $DBNAME 2>/dev/null <<< "unload to '/dev/stdout' delimiter '$DL' select $( proj_clause ) from sysmaster:sysdual;" 
+		dbaccess $DBNAME  <<< "unload to '/dev/stdout' delimiter '$DL' select $( proj_clause ) from sysmaster:sysdual;" 
+	}
+
+	IFS="$DL" 
+	printf "$label:- %s\n" $( run_example ) 
+	IFS="$OFS"
+
+	{ tee ./prng_bench_run.sql | dbaccess $DBNAME 2>/dev/null ;} <<-EOF
+
+		unload to '$FIFO'
+		select 
+			limit ${tgt_line_count:-100000}
+			$( 
+				sep=""; 
+				for prj in "${projection_clauses[@]}" ; do 
+					printf "%s%s\n" "$sep" "$prj"; 
+					sep=","
+				done 
+			)
+		from	
+						table(seq(1,1,${seq_lines}))
+			$( 
+				# carefull here, this is x=1 and '<' not '<='
+				# delberately so we don't get waaaaay to many xjones
+				# 1 to many is waaaaay
+				for (( x=1; x < xjoins; x++ )); do 
+					printf "cross join table(seq(1,1,%d))\n" "$seq_lines"; 
+				done 
+			)
+		;
 EOF
 	(( $? != 0 )) && exit
 }
