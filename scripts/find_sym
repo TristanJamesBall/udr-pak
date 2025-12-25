@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Quick and dirty "which library provides procedure [X]
+
+SYM=${1:?need symbol/function name}
+
+{
+	# INFORMIXSDK is a me thing, not something informix uses ( that I know of anyway )
+	find ${INFORMIXSDK+${INFORMIXSDK%/}/}  ${INFORMIXDIR+${INFORMIXDIR%/}/}  -name "*.so" 2>/dev/null
+} | {
+   	xargs  nm  2>/dev/null
+
+} | {
+	grep -E "(:$|${SYM:?need symbol/function name})" 
+
+} | {
+	awk '
+		/^\/.*:$/ { 
+			libname=$1;
+			next
+		}
+		/'"T ${SYM}"'/ {
+			printf("%s %s\n",libname,$0);
+			next
+		}
+		'
+} | { 
+	column -t
+}
