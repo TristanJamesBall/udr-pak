@@ -1,0 +1,3 @@
+
+ifx_ci		onsoctcp *127.0.0.1		17407 
+dr_ifx_ci	drsoctcp *127.0.0.1		24870 
